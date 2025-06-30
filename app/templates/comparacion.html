@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScoutGine | Comparación</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"
+    />
+    
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="{% static 'myapp/css/statsequipo.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/css/menu.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/css/ligas.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/css/topnav.css' %}" />
+    <link rel="stylesheet" href="{% static 'myapp/css/comparacion.css' %}">
+
+    <script src="{% static 'myapp/js/ligas.js' %}"></script>
+    <script src="{% static 'myapp/js/topnav.js' %}"></script>
+    <script src="{% static 'myapp/js/comparacion.js' %}"></script>
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    {% include 'partials/header.html' %} 
+    {% include 'partials/topnav.html' %}
+
+    <!-- COMPARACIÓN DE EQUIPOS -->
+    <div class="comparacion-container" id="equipos-comparacion-container">
+        <h2>Comparar Equipos</h2>
+        
+        <!-- ✅ CONTROLES SUPERIORES PARA EQUIPOS (IGUAL QUE JUGADORES) -->
+        <div class="controles-superiores-equipos">
+            <!-- ✅ SELECTOR DE GRUPO -->
+            <div class="controles-filtros">
+                <div class="grupo-select-container">
+                    <label for="grupo-select-equipos">Grupo de estadísticas:</label>
+                    <select name="grupo" id="grupo-select-equipos" required>
+                        {% for grupo in GRUPOS_STATS_EQUIPOS.keys %}
+                            <option value="{{ grupo }}">{{ grupo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ BOTONES DE MODO -->
+            <div class="botones-modo">
+                <button type="button" id="btn-graficos-equipos" class="modo-btn modo-activo">Gráficos</button>
+                <button type="button" id="btn-estadisticas-equipos" class="modo-btn">Estadísticas</button>
+            </div>
+        </div>
+
+        <div class="comparacion-flex">
+            <!-- ✅ EQUIPO 1 CON NUEVO DISEÑO -->
+            <div class="equipo-selector">
+                <div class="selector-equipo">
+                    <label for="equipo1-select">Equipo 1</label>
+                    <select name="equipo1" id="equipo1-select" required>
+                        <option value="">Selecciona equipo</option>
+                        {% for equipo in equipos %}
+                            <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ CENTRO CON RADAR -->
+            <div class="radar-center">
+                <div id="radar-comparacion-equipos" style="width:420px;height:420px;margin:0 auto;"></div>
+            </div>
+            
+            <!-- ✅ EQUIPO 2 CON NUEVO DISEÑO -->
+            <div class="equipo-selector">
+                <div class="selector-equipo">
+                    <label for="equipo2-select">Equipo 2</label>
+                    <select name="equipo2" id="equipo2-select" required>
+                        <option value="">Selecciona equipo</option>
+                        {% for equipo in equipos %}
+                            <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div id="estadisticas-comparacion-equipos" style="display:none;"></div>
+    </div>
+
+    <!-- COMPARACIÓN DE JUGADORES -->
+    <div class="comparacion-container" id="jugadores-comparacion-container" style="display: none;">
+        <h2>Comparar Jugadores</h2>
+        
+        <!-- ✅ CONTROLES SUPERIORES PARA JUGADORES -->
+        <div class="controles-superiores-jugadores">
+            <!-- ✅ SELECTOR DE GRUPO Y POSICIÓN -->
+            <div class="controles-filtros">
+                <div class="grupo-select-container">
+                    <label for="grupo-select-jugadores">Grupo de estadísticas:</label>
+                    <select name="grupo" id="grupo-select-jugadores" required>
+                        {% for grupo in GRUPOS_STATS_JUGADORES.keys %}
+                            <option value="{{ grupo }}">{{ grupo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="posicion-select-container">
+                    <label for="posicion-select-jugadores">Posición:</label>
+                    <select name="posicion" id="posicion-select-jugadores">
+                        <option value="">Todas las posiciones</option>
+                        <!-- ✅ POSICIONES REALES DE LA BASE DE DATOS -->
+                        <option value="GK">Arquero (GK)</option>
+                        <option value="RB">Lateral Derecho (RB)</option>
+                        <option value="CB">Defensor Central (CB)</option>
+                        <option value="LB">Lateral Izquierdo (LB)</option>
+                        <option value="Defender">Defensor</option>
+                        <option value="DM">Mediocampista Defensivo (DM)</option>
+                        <option value="CM">Mediocampista Central (CM)</option>
+                        <option value="RM">Mediocampista Derecho (RM)</option>
+                        <option value="LM">Mediocampista Izquierdo (LM)</option>
+                        <option value="AM">Mediocampista Ofensivo (AM)</option>
+                        <option value="Midfielder">Mediocampista</option>
+                        <option value="RW">Extremo Derecho (RW)</option>
+                        <option value="LW">Extremo Izquierdo (LW)</option>
+                        <option value="ST">Delantero (ST)</option>
+                        <option value="Attacker">Delantero</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ BOTONES DE MODO -->
+            <div class="botones-modo">
+                <button type="button" id="btn-graficos-jugadores" class="modo-btn modo-activo">Gráficos</button>
+                <button type="button" id="btn-estadisticas-jugadores" class="modo-btn">Estadísticas</button>
+            </div>
+        </div>
+
+        <div class="comparacion-flex">
+            <!-- ✅ JUGADOR 1 CON FILTROS DE EQUIPO -->
+            <div class="jugador-selector">
+                <div class="filtros-jugador">
+                    <label for="equipo-jugador1-select">Equipo del Jugador 1</label>
+                    <select name="equipo-jugador1" id="equipo-jugador1-select" required>
+                        <option value="">Selecciona equipo</option>
+                        {% for equipo in equipos %}
+                            <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="selector-jugador">
+                    <label for="jugador1-select">Jugador 1</label>
+                    <select name="jugador1" id="jugador1-select" required disabled>
+                        <option value="">Primero selecciona equipo</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ CENTRO CON RADAR -->
+            <div class="radar-center">
+                <div id="radar-comparacion-jugadores" style="width:420px;height:420px;margin:0 auto;"></div>
+            </div>
+            
+            <!-- ✅ JUGADOR 2 CON FILTROS DE EQUIPO -->
+            <div class="jugador-selector">
+                <div class="filtros-jugador">
+                    <label for="equipo-jugador2-select">Equipo del Jugador 2</label>
+                    <select name="equipo-jugador2" id="equipo-jugador2-select" required>
+                        <option value="">Selecciona equipo</option>
+                        {% for equipo in equipos %}
+                            <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="selector-jugador">
+                    <label for="jugador2-select">Jugador 2</label>
+                    <select name="jugador2" id="jugador2-select" required disabled>
+                        <option value="">Primero selecciona equipo</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div id="estadisticas-comparacion-jugadores" style="display:none;"></div>
+    </div>
+
+    <script id="equipos-data" type="application/json">{{ equipos_data|safe }}</script>
+    <script id="grupos-stats-equipos-data" type="application/json">{{ GRUPOS_STATS_EQUIPOS_JSON|safe }}</script>
+    <script id="jugadores-data" type="application/json">{{ jugadores_data|safe }}</script>
+    <script id="grupos-stats-jugadores-data" type="application/json">{{ GRUPOS_STATS_JUGADORES_JSON|safe }}</script>
+  </body>
+</html>
