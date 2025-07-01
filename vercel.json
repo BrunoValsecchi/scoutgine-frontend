@@ -1,12 +1,8 @@
 {
   "version": 2,
   "name": "scoutgine-frontend",
-  "builds": [
-    {
-      "src": "app/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
   "routes": [
     {
       "src": "/static/(.*)",
