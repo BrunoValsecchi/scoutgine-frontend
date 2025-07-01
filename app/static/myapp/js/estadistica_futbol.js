@@ -70,7 +70,7 @@ if (typeof window.EstadisticaFutbolLoaded === 'undefined') {
                     stat_comparacion: statComparacion
                 };
 
-                const response = await fetch('/ajax/grafico-dispersion/', {
+                const response = await fetch('https://scoutgine-backend.onrender.com/ajax/grafico-dispersion/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -288,7 +288,7 @@ if (typeof window.EstadisticaFutbolLoaded === 'undefined') {
         radarContainer.style.height = '620px';
         radarContainer.style.margin = '0 auto';
 
-        fetch(`/ajax/radar-equipo/?equipo_id=${window.equipoId}&grupo=${grupo}`)
+        fetch(`https://scoutgine-backend.onrender.com/ajax/radar-equipo/?equipo_id=${window.equipoId}&grupo=${grupo}`)
             .then(resp => resp.json())
             .then (data => {
                 const radarChart = echarts.init(radarContainer, null, {devicePixelRatio: 2});
@@ -363,7 +363,7 @@ if (typeof window.EstadisticaFutbolLoaded === 'undefined') {
         boxplotContainer.style.margin = '0 auto 32px auto';
 
         console.log(`[Boxplot] Fetch: /ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`);
-        fetch(`/ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`)
+        fetch(`https://scoutgine-backend.onrender.com/ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`)
             .then(resp => {
                 console.log('[Boxplot] Respuesta fetch:', resp);
                 return resp.json();

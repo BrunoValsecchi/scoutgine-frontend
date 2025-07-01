@@ -1065,3 +1065,14 @@ document.addEventListener('DOMContentLoaded', function() {
         grupoJugadoresSelect.addEventListener('change', actualizarComparacionJugadores);
     }
 });
+
+// BUSCAR ESTA LÍNEA (aproximadamente línea 500-600):
+fetch(`/stats_jugadores/`)
+
+// CAMBIAR A:
+fetch(`https://scoutgine-backend.onrender.com/stats_jugadores/`)
+
+// Y TODAS LAS OTRAS LÍNEAS SIMILARES:
+fetch(`/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`)
+// CAMBIAR A:
+fetch(`https://scoutgine-backend.onrender.com/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`)

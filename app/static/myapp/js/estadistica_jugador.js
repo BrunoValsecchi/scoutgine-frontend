@@ -10,7 +10,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
         radarContainer.style.height = '620px';
         radarContainer.style.margin = '0 auto';
 
-        let url = `/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`;
+        let url = `https://scoutgine-backend.onrender.com/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`;
         if (posicion) url += `&posicion=${encodeURIComponent(posicion)}`;
 
         fetch(url)
@@ -98,7 +98,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
         chartContainer.style.height = '600px';
         chartContainer.innerHTML = 'Cargando...';
 
-        let url = `/ajax/grafico-dispersion-jugador/?stat_x=${statX}&posicion=${encodeURIComponent(posicion)}`;
+        let url = `https://scoutgine-backend.onrender.com/ajax/grafico-dispersion-jugador/?stat_x=${statX}&posicion=${encodeURIComponent(posicion)}`;
         if (statY) url += `&stat_y=${statY}`;
         if (window.jugadorData?.jugadorId) url += `&jugador_id=${window.jugadorData.jugadorId}`;
 
@@ -244,7 +244,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
         boxplotContainer.style.height = '350px';
         boxplotContainer.innerHTML = 'Cargando...';
 
-        let url = `/ajax/boxplot-jugador/?jugador_id=${window.jugadorData.jugadorId}&estadistica=${encodeURIComponent(estadistica)}`;
+        let url = `https://scoutgine-backend.onrender.com/ajax/boxplot-jugador/?jugador_id=${window.jugadorData.jugadorId}&estadistica=${encodeURIComponent(estadistica)}`;
         if (posicion) url += `&posicion=${encodeURIComponent(posicion)}`;
 
         fetch(url)
@@ -400,7 +400,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
         }
 
         // 2. Cargar dispersión
-        fetch(`/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
+        fetch(`https://scoutgine-backend.onrender.com/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
             .then(resp => resp.json())
             .then(data => {
                 const posiciones = data.posiciones || [];
@@ -442,7 +442,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
             });
 
         // 3. Cargar boxplot
-        fetch(`/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
+        fetch(`https://scoutgine-backend.onrender.com/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
             .then(resp => resp.json())
             .then(data => {
                 const posiciones = data.posiciones || [];

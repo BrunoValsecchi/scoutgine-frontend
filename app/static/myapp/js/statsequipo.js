@@ -99,7 +99,7 @@
         
         console.log("🌐 Haciendo petición a:", `/stats_equipos/?format=json&estadistica=${estadistica}`);
         
-        fetch(`/stats_equipos/?format=json&estadistica=${estadistica}`)
+        fetch(`https://scoutgine-backend.onrender.com/stats_equipos/?format=json&estadistica=${estadistica}`)
             .then(response => {
                 console.log("📡 Response status:", response.status);
                 return response.json();
