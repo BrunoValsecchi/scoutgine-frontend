@@ -1,24 +1,30 @@
 {
   "version": 2,
-  "name": "scoutgine-frontend",
   "cleanUrls": true,
-  "trailingSlash": false,
   "routes": [
     {
       "src": "/static/(.*)",
       "dest": "/app/static/$1"
     },
     {
-      "src": "/myapp/(.*)",
-      "dest": "/app/myapp/$1"
+      "src": "/",
+      "dest": "/app/templates/index.html"
     },
     {
-      "src": "/",
-      "dest": "/app/index.html"
+      "src": "/menu",
+      "dest": "/app/templates/menu.html"
+    },
+    {
+      "src": "/ligas",
+      "dest": "/app/templates/ligas.html"
+    },
+    {
+      "src": "/equipo",
+      "dest": "/app/templates/equipo.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/app/$1"
+      "dest": "/app/templates/index.html"
     }
   ]
 }
