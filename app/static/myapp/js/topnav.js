@@ -222,7 +222,7 @@ function setupLigasEquiposButtons() {
             const currentPath = window.location.pathname;
             if (currentPath.includes('/ligas/') && !statsEquipoContainer.innerHTML.trim()) {
                 console.log("Cargando stats equipos...");
-                fetch('/stats_equipos/')
+                fetch('https://scoutgine-backend.onrender.com/stats_equipos/')
                     .then(res => res.text())
                     .then(html => {
                         statsEquipoContainer.innerHTML = html;
@@ -249,7 +249,7 @@ function setupLigasEquiposButtons() {
             const currentPath = window.location.pathname;
             if (currentPath.includes('/ligas/')) {
                 console.log("🔄 Iniciando fetch a /stats_jugadores/");
-                fetch('/stats_jugadores/')
+                fetch('https://scoutgine-backend.onrender.com/stats_jugadores/')
                     .then(res => {
                         console.log("✅ Response recibida:", res.status, res.statusText);
                         return res.text();

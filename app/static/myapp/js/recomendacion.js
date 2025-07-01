@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Realizar petición AJAX
-        fetch(`https://scoutgine-backend.onrender.com/ajax/recomendar-jugadores/?${params.toString()}`)
+        fetch(`/ajax/recomendar-jugadores/?${params.toString()}`)
             .then(response => response.json())
             .then(data => {
                 loading.style.display = 'none';

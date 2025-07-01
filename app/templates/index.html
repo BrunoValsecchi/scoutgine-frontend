@@ -2,105 +2,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoutGine - Análisis de Fútbol</title>
-    
-    <!-- CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/app/static/css/style.css">
-    <link rel="stylesheet" href="/app/static/css/menu.css">
-    <link rel="stylesheet" href="/app/static/css/ligas.css">
-    <script src="{% static 'myapp/js/config.js' %}"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScoutGine | Estadísticas de Jugadores</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/styles/ag-grid.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/styles/ag-theme-alpine.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'myapp/css/style.css' %}" />
+
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/dist/ag-grid-community.min.noStyle.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+  <script src="{% static 'myapp/js/grafico.js' %}"></script>
+  <script src="{% static 'myapp/js/headerlan.js' %}"></script>
+  <script src="{% static 'myapp/js/presentacion.js' %}"></script>
 </head>
 <body>
-    <div id="app">
-        <h1>🚀 ScoutGine Frontend</h1>
-        <p>Estado del backend: <span id="status">Conectando...</span></p>
-        
-        <div class="menu-buttons">
-            <button onclick="cargarLigas()">🏆 Ligas</button>
-            <button onclick="cargarEquipos()">⚽ Equipos</button>
-            <button onclick="cargarMenu()">📋 Menú</button>
-        </div>
-        
-        <div id="content">
-            <!-- El contenido se carga aquí -->
-        </div>
-    </div>
-
-    <script>
-        // 👈 CAMBIAR ESTA URL POR LA DE TU BACKEND EN RENDER
-        const API_URL = 'https://scoutgine-backend.onrender.com';
-        
-        async function fetchAPI(endpoint) {
-            try {
-                const response = await fetch(`${API_URL}${endpoint}`, {
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
-            }
-        }
-        
-        async function cargarLigas() {
-            try {
-                const data = await fetchAPI('/ligas/');
-                document.getElementById('content').innerHTML = `
-                    <h2>🏆 Ligas</h2>
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                `;
-            } catch (error) {
-                document.getElementById('content').innerHTML = `Error: ${error.message}`;
-            }
-        }
-        
-        async function cargarEquipos() {
-            try {
-                const data = await fetchAPI('/equipo/');
-                document.getElementById('content').innerHTML = `
-                    <h2>⚽ Equipos</h2>
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                `;
-            } catch (error) {
-                document.getElementById('content').innerHTML = `Error: ${error.message}`;
-            }
-        }
-        
-        async function cargarMenu() {
-            try {
-                const data = await fetchAPI('/menu/');
-                document.getElementById('content').innerHTML = `
-                    <h2>📋 Menú</h2>
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                `;
-            } catch (error) {
-                document.getElementById('content').innerHTML = `Error: ${error.message}`;
-            }
-        }
-        
-        // Verificar conexión al cargar
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetchAPI('/');
-                document.getElementById('status').innerHTML = '✅ Conectado';
-                console.log('Backend conectado:', response);
-            } catch (error) {
-                document.getElementById('status').innerHTML = '❌ Error: ' + error.message;
-            }
-        });
-    </script>
+  {% include 'partials/headerlan.html' %}
+  {% include 'partials/presentacion.html' %}
+  {% include 'partials/footerlan.html' %}
 </body>
 </html>
 
