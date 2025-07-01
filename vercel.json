@@ -4,27 +4,19 @@
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/app/static/$1"
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/js/$1"
     },
     {
       "src": "/",
-      "dest": "/app/templates/index.html"
-    },
-    {
-      "src": "/menu",
-      "dest": "/app/templates/menu.html"
-    },
-    {
-      "src": "/ligas",
-      "dest": "/app/templates/ligas.html"
-    },
-    {
-      "src": "/equipo",
-      "dest": "/app/templates/equipo.html"
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/app/templates/index.html"
+      "dest": "/index.html"
     }
   ]
 }
