@@ -1,0 +1,149 @@
+<div class="topnav" id="topnav">
+    <div class="topnav-content">
+        <!-- Searchbar común -->
+        <div class="topnav-searchbar">
+            <input type="text" placeholder="Buscar..." class="topnav-search-input">
+        </div>
+
+        <!-- Botones por defecto (Dashboard/Menu) -->
+        <div class="top-nav-actions default-actions">
+            <span class="nav-info">Panel principal</span>
+        </div>
+
+        <!-- Botones para Ligas -->
+        <div class="top-nav-actions ligas-actions" style="display: none;">
+            <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
+            <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipo</a>
+            <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Stats Jugadores</a>
+        </div>
+
+        <!-- Botones para Comparación -->
+        <div class="top-nav-actions comparacion-actions" style="display: none;">
+            <a href="#" id="btn-comparar-equipos" class="nav-action-btn active">Equipos</a>
+            <a href="#" id="btn-comparar-jugadores" class="nav-action-btn">Jugadores</a>
+        </div>
+
+        
+
+        <!-- Botones para Detalle de Equipo -->
+        <div class="top-nav-actions equipo_detalle-actions" style="display: none;">
+            <a href="#" id="btn-tablas" class="nav-action-btn active">Equipo</a>
+            <a href="#" id="btn-stats-equipo" class="nav-action-btn">Plantilla</a>
+            <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Estadísticas</a>
+        </div>
+
+        <!-- Botones para Detalle de Jugador -->
+        <div class="top-nav-actions jugador_detalle-actions" style="display: none;">
+            <a href="#" id="btn-info" class="nav-action-btn active">Información</a>
+            <a href="#" id="btn-stats" class="nav-action-btn">Estadísticas</a>
+        </div>
+
+        <!-- Botones para Estadísticas -->
+        <div class="top-nav-actions estadistica_detalle-actions" style="display: none;">
+            <a href="#" id="btn-general" class="nav-action-btn active">General</a>
+            <a href="#" id="btn-ofensivo" class="nav-action-btn">Ofensivo</a>
+            <a href="#" id="btn-defensivo" class="nav-action-btn">Defensivo</a>
+            <a href="#" id="btn-portero" class="nav-action-btn">Portero</a>
+        </div>
+
+        <!-- Botones para Recomendaciones -->
+        <div class="top-nav-actions recomendacion-actions" style="display: none;">
+            <a href="#" id="btn-recomendacion" class="nav-action-btn active">Buscar Jugadores</a>
+            <a href="#" id="btn-perfiles" class="nav-action-btn">Perfiles</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initTopNav();
+});
+
+function initTopNav() {
+    // Detectar página actual
+    const currentPage = getCurrentPageName();
+    
+    // Mostrar botones correspondientes
+    showTopNavForPage(currentPage);
+    
+    // Event listeners para botones
+    const navButtons = document.querySelectorAll('.nav-action-btn');
+    navButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const buttonId = this.getAttribute('id');
+            
+            // Marcar como activo
+            const parentActions = this.closest('.top-nav-actions');
+            parentActions.querySelectorAll('.nav-action-btn').forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Disparar evento personalizado
+            document.dispatchEvent(new CustomEvent('navButtonClick', {
+                detail: { page: currentPage, button: buttonId }
+            }));
+        });
+    });
+
+    // Event listener para buscador
+    const searchInput = document.querySelector('.topnav-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value;
+            document.dispatchEvent(new CustomEvent('topNavSearch', {
+                detail: { searchTerm, page: currentPage }
+            }));
+        });
+    }
+}
+
+function getCurrentPageName() {
+    const path = window.location.pathname;
+    const filename = path.split('/').pop();
+    return filename.replace('.html', '') || 'menu';
+}
+
+function showTopNavForPage(page) {
+    // Ocultar todos los grupos de acciones
+    const allActionGroups = document.querySelectorAll('.top-nav-actions');
+    allActionGroups.forEach(group => group.style.display = 'none');
+    
+    // Mostrar grupo correspondiente a la página
+    const pageActionGroup = document.querySelector(`.${page}-actions`);
+    if (pageActionGroup) {
+        pageActionGroup.style.display = 'flex';
+        
+        // Actualizar placeholder del buscador según la página
+        updateSearchPlaceholder(page);
+    } else {
+        // Mostrar acciones por defecto
+        const defaultActions = document.querySelector('.default-actions');
+        if (defaultActions) {
+            defaultActions.style.display = 'flex';
+        }
+    }
+}
+
+function updateSearchPlaceholder(page) {
+    const searchInput = document.querySelector('.topnav-search-input');
+    if (!searchInput) return;
+    
+    const placeholders = {
+        'ligas': 'Buscar equipos...',
+        'equipo': 'Buscar equipos...',
+        'equipo_detalle': 'Buscar jugador...',
+        'jugador_detalle': 'Buscar jugador...',
+        'comparacion': 'Buscar para comparar...',
+        'recomendacion': 'Buscar jugadores...',
+        'estadistica_detalle': 'Buscar estadísticas...',
+        'estadistica_jugador': 'Buscar estadísticas...'
+    };
+    
+    searchInput.placeholder = placeholders[page] || 'Buscar...';
+}
+
+// Función para cambiar topnav desde otras páginas
+window.changeTopNavForPage = function(page) {
+    showTopNavForPage(page);
+};
+</script>

@@ -1,229 +1,401 @@
+/* ✅ CONTENEDOR PRINCIPAL - FONDO ACTUALIZADO */
+.main-content {
+    padding: 20px;
+    min-height: 100vh;
+    background: #0a0a0f; /* ← COLOR EXACTO DEL MENU */
+}
+
+/* ✅ GRID DE 2 COLUMNAS PARA TABLAS */
 .ligas-dos-filas {
-  background: #0a0a0f;
-  min-height: 100vh;
-  padding: 0.3rem 0.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px 0;
 }
 
 .leagues-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem; /* Más separación entre las cards */
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0;
+    display: contents; /* Permite que los hijos se distribuyan en el grid padre */
 }
 
+    /* ✅ CARDS DE TORNEOS - ALTURA AUMENTADA */
 .tournament-card {
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  padding: 0.8rem; /* Más padding interno */
-  min-width: 280px;
-  border: 1px solid #3498db;
-  transition: all 0.2s ease;
-  height: auto;
-  margin-bottom: 0.8rem; /* Separación adicional abajo */
+    background: linear-gradient(145deg, #181824, #1a1f3a);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.2);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    min-height: 650px; /* ← AUMENTADO DE 400px A 650px */
+    position: relative;
+    overflow: hidden;
 }
 
-/* HOVER EN LA CARD COMPLETA */
+.tournament-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3498db, #2980b9, #1abc9c);
+    opacity: 0.8;
+}
+
 .tournament-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
-  border-color: #2980b9;
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 50px rgba(52, 152, 219, 0.2),
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: #3498db;
 }
 
+/* ✅ TÍTULOS */
 .tournament-title {
-  text-align: center;
-  font-family: "Orbitron", sans-serif;
-  font-size: 1rem;
-  color: #ffffff;
-  margin-bottom: 0.8rem; /* Más separación del título */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
-}
-
-.tournament-title:after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 1px;
-  background: #3498db;
-  border-radius: 1px;
-}
-
-.zone-section {
-  margin-bottom: 1rem; /* Más separación entre zonas */
+    color: #3498db;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+    text-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
 }
 
 .zone-title {
-  font-family: "Rajdhani", sans-serif;
-  font-size: 0.9rem;
-  color: #a0a8c0;
-  margin-bottom: 0.5rem; /* Más separación del título de zona */
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+    color: #e1e1e6;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 15px;
+    text-align: center;
+    opacity: 0.85;
 }
 
+/* ✅ CONTENEDOR DE TABLA - ALTURA AUMENTADA */
 .table-container {
-  overflow-x: auto;
-  border-radius: 4px;
-  background: #050508;
-  padding: 0.4rem; /* Más padding en el contenedor */
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 0.6rem; /* Separación entre tablas */
+    width: 100%;
+    height: 575px; /* ← AUMENTADO DE 350px A 550px */
+    margin-top: 10px;
 }
 
-/* ESTILOS PARA AG GRID - NÚMEROS MÁS PEQUEÑOS */
+.zone-section {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ✅ AG GRID CUSTOMIZADO - HOVER MÁS CLARO */
 .ag-theme-dark-custom {
-  --ag-background-color: #050508;
-  --ag-header-background-color: #0f0f14;
-  --ag-header-foreground-color: #e1e1e6;
-  --ag-foreground-color: #e1e1e6;
-  --ag-border-color: rgba(255, 255, 255, 0.1);
-  --ag-row-border-color: rgba(255, 255, 255, 0.05);
-  --ag-odd-row-background-color: rgba(255, 255, 255, 0.02);
-  --ag-even-row-background-color: rgba(255, 255, 255, 0.04);
-  --ag-selected-row-background-color: rgba(255, 215, 0, 0.3);
-  --ag-row-height: 28px; /* Filas un poco más altas para mejor centrado */
-  --ag-header-height: 32px; /* Headers más altos */
-  font-family: "Rajdhani", sans-serif;
-  border-radius: 4px;
-  overflow: hidden;
-  font-size: 0.8rem; /* Texto general más pequeño */
+    --ag-background-color: #0a0a0f;
+    --ag-header-background-color: #181824;
+    --ag-header-foreground-color: #3498db;
+    --ag-foreground-color: #e1e1e6;
+    --ag-border-color: rgba(52, 152, 219, 0.2);
+    --ag-row-hover-color: rgba(52, 152, 219, 0.7); /* ← MÁS CLARO: 0.7 en lugar de 0.4 */
+    --ag-selected-row-background-color: rgba(52, 152, 219, 0.6);
+    --ag-odd-row-background-color: #0a0a0f;
+    --ag-even-row-background-color: #0f0f14;
+    --ag-header-height: 45px;
+    --ag-row-height: 35px;
+    font-family: 'Rajdhani', sans-serif;
+    background: #0a0a0f;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(52, 152, 219, 0.2);
 }
 
-/* HOVER COLOR ORO EN AG GRID */
+/* ✅ HOVER MÁS CLARO Y VISIBLE */
 .ag-theme-dark-custom .ag-row:hover {
-  background-color: rgba(255, 215, 0, 0.25) !important;
-  border-left: 2px solid #ffd700 !important;
-  cursor: pointer;
+    background-color: rgba(52, 152, 219, 0.7) !important; /* ← MÁS OPACO */
+    color: #ffffff !important;
 }
 
 .ag-theme-dark-custom .ag-row:hover .ag-cell {
-  color: #000000 !important;
-  font-weight: 600 !important;
-  text-shadow: none !important;
+    color: #ffffff !important;
+    font-weight: 700 !important; /* ← MÁS BOLD */
+    background: none !important;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important; /* ← SOMBRA BLANCA */
 }
 
-/* Hover específico para la columna de posición */
-.ag-theme-dark-custom .ag-row:hover .ag-cell:first-child {
-  background-color: #ffd700 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-radius: 2px;
+/* ✅ COLORES ESPECÍFICOS EN HOVER - MÁS BRILLANTES */
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="Pos"] {
+    color: #00ffff !important; /* ← CYAN BRILLANTE */
+    font-weight: 800 !important;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.8) !important;
 }
 
-/* Hover específico para la columna de puntos (última) */
-.ag-theme-dark-custom .ag-row:hover .ag-cell:last-child {
-  background-color: #ff8c00 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-radius: 2px;
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="Equipo"] {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 1) !important;
 }
 
-.ag-theme-dark-custom .ag-header {
-  border-bottom: 1px solid #3498db;
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="PTS"] {
+    color: #00ffff !important; /* ← CYAN BRILLANTE */
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.8) !important;
 }
 
-.ag-theme-dark-custom .ag-header-cell {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  font-size: 0.75rem; /* Headers más pequeños */
-  padding: 0.4rem 0.2rem; /* Padding vertical más equilibrado */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* ✅ HOVER PARA DIFERENCIA DE GOLES - MÁS VISIBLE */
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="DIF"] {
+    font-weight: 700 !important;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important;
 }
 
-.ag-theme-dark-custom .ag-cell {
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  text-align: center;
-  font-size: 0.75rem; /* Números y texto más pequeños */
-  line-height: 1; /* Line-height más ajustado */
-  transition: all 0.1s ease;
-  padding: 0.5rem 0.2rem; /* Padding vertical más equilibrado */
-  display: flex !important; /* Usar flexbox */
-  align-items: center !important; /* Centrar verticalmente */
-  justify-content: center !important; /* Centrar horizontalmente */
+/* ✅ TODAS LAS COLUMNAS NUMÉRICAS MÁS CLARAS EN HOVER */
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="PJ"],
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="PG"],
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="PE"],
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="PP"],
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="GF"],
+.ag-theme-dark-custom .ag-row:hover .ag-cell[col-id="GC"] {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Columna de puntos específicamente más pequeña */
-.ag-theme-dark-custom .ag-cell:last-child {
-  font-size: 0.7rem !important; /* Puntos aún más pequeños */
-  font-weight: 600;
+/* ✅ TABLA HTML DE RESPALDO - HOVER MÁS CLARO */
+.tabla-posiciones tbody tr:hover {
+    background: rgba(52, 152, 219, 0.7) !important; /* ← MÁS CLARO */
 }
 
-/* Columna de posición más pequeña */
-.ag-theme-dark-custom .ag-cell:first-child {
-  font-size: 0.7rem !important; /* Posición más pequeña */
-  font-weight: 600;
+.tabla-posiciones tbody tr:hover td {
+    color: #ffffff !important;
+    font-weight: 700 !important; /* ← MÁS BOLD */
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important; /* ← SOMBRA BLANCA */
 }
 
-/* Nombre del equipo alineado a la izquierda */
-.ag-theme-dark-custom .ag-cell:nth-child(2) {
-  justify-content: flex-start !important; /* Alinear nombre del equipo a la izquierda */
-  padding-left: 0.4rem; /* Más padding izquierdo para el nombre */
+.tabla-posiciones tbody tr:hover .pos-cell {
+    color: #00ffff !important; /* ← CYAN BRILLANTE */
+    font-weight: 800 !important;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.8) !important;
 }
 
-/* Estilos para filas alternas sin hover */
-.ag-theme-dark-custom .ag-row:nth-child(even):not(:hover) {
-  background-color: rgba(255, 255, 255, 0.04);
+.tabla-posiciones tbody tr:hover .equipo-cell {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 1) !important;
 }
 
-.ag-theme-dark-custom .ag-row:nth-child(odd):not(:hover) {
-  background-color: rgba(255, 255, 255, 0.02);
+.tabla-posiciones tbody tr:hover .pts-cell {
+    color: #00ffff !important; /* ← CYAN BRILLANTE */
+    font-weight: 800 !important;
+    font-size: 1.1rem !important;
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.8) !important;
 }
 
-@media (max-width: 1200px) {
-  .leagues-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+/* ✅ EFECTO ADICIONAL - BORDE SUTIL EN HOVER */
+.ag-theme-dark-custom .ag-row:hover {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 4px !important;
+}
+
+.tabla-posiciones tbody tr:hover {
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 4px !important;
+}
+
+/* ✅ ESTILOS PARA STATS DE EQUIPOS (COPIADOS DE STATSJUGADORES.CSS) */
+.stats-jugadores-container {
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem auto;
+    max-width: 1000px;
+    border: 1px solid #3498db;
+}
+
+.stats-jugadores-container h2 {
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-jugadores-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1rem;
-  }
 }
 
-@media (max-width: 900px) {
-  .leagues-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-  }
-  .tournament-card {
-    padding: 0.6rem;
-    min-width: 250px;
-    margin-bottom: 0.6rem;
-  }
-  .tournament-title {
-    font-size: 0.7rem;
-  }
+.stat-block {
+    border-radius: 6px;
+    padding: 1rem;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    position: relative;
 }
 
-@media (max-width: 600px) {
-  .ligas-dos-filas {
-    padding: 0.3rem;
-  }
-  .leagues-grid {
-    grid-template-columns: 1fr;
-    gap: 0.6rem;
-  }
-  .tournament-card {
-    padding: 0.5rem;
-    min-width: 220px;
-    margin-bottom: 0.5rem;
-  }
-  .tournament-title {
-    font-size: 0.85rem;
-    letter-spacing: 0.3px;
-  }
-  .ag-theme-dark-custom {
-    font-size: 0.7rem;
-    --ag-row-height: 26px;
-    --ag-header-height: 30px;
-  }
+.stat-block h3 {
+    color: #3498db;
+    text-align: center;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.stat-block ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stat-block li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #e1e1e6;
+    padding: 0.8rem 0;
+    font-size: 0.9rem;
+}
+
+.stat-block li:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jugador-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.jugador-nombre {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+.jugador-equipo {
+    font-size: 0.8rem;
+    color: #a0a8c0;
+    font-weight: 400;
+}
+
+.jugador-posicion {
+    font-size: 0.75rem;
+    color: #3498db;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-valor {
+    color: #3498db;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    margin-left: 1rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* Números de ranking para equipos */
+.stat-block li:nth-child(1) .jugador-nombre:before {
+    content: "🥇 ";
+}
+
+.stat-block li:nth-child(2) .jugador-nombre:before {
+    content: "🥈 ";
+}
+
+.stat-block li:nth-child(3) .jugador-nombre:before {
+    content: "🥉 ";
+}
+
+/* Efectos de hover */
+.stat-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.2);
+    transition: all 0.3s ease;
+}
+
+/* Efectos de animación */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-block {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.stat-block:nth-child(1) { animation-delay: 0.1s; }
+.stat-block:nth-child(2) { animation-delay: 0.2s; }
+.stat-block:nth-child(3) { animation-delay: 0.3s; }
+.stat-block:nth-child(4) { animation-delay: 0.4s; }
+.stat-block:nth-child(5) { animation-delay: 0.5s; }
+.stat-block:nth-child(6) { animation-delay: 0.6s; }
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .stats-jugadores-container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+    
+    .stats-jugadores-list {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-block {
+        padding: 1rem;
+    }
+    
+    .stats-jugadores-container h2 {
+        font-size: 1.5rem;
+    }
+    
+    .jugador-info {
+        margin-right: 0.5rem;
+    }
+    
+    .stat-valor {
+        margin-left: 0.5rem;
+        min-width: 50px;
+        font-size: 0.8rem;
+        padding: 0.2rem 0.6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-block li {
+        padding: 0.6rem 0;
+        font-size: 0.8rem;
+    }
+    
+    .jugador-nombre {
+        font-size: 0.85rem;
+    }
+    
+    .jugador-equipo {
+        font-size: 0.75rem;
+    }
+    
+    .jugador-posicion {
+        font-size: 0.7rem;
+    }
+    
+    .stat-valor {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        min-width: 45px;
+    }
 }

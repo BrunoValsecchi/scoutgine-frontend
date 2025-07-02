@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Equipo | ScoutGine</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- ✅ CSS CON RUTAS ABSOLUTAS -->
+    <link rel="stylesheet" href="/static/myapp/css/style.css" />
+    <link rel="stylesheet" href="/static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="/static/myapp/css/topnav.css" />
+    <link rel="stylesheet" href="/static/myapp/css/equipo_detalle.css" />
+    <link rel="stylesheet" href="/static/myapp/css/plantilla.css" />
+    <link rel="stylesheet" href="/static/myapp/css/equipo_stats.css" />
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <main class="main-content">
+      <!-- ✅ INFORMACIÓN DEL EQUIPO (visible por defecto) -->
+      <div id="info-container">
+        <div class="loading-container" id="info-loading">
+          <div class="loading-spinner">
+            <i class="bx bx-loader-alt bx-spin"></i>
+          </div>
+          <p>Cargando información del equipo...</p>
+        </div>
+        <div id="info-content"></div>
+      </div>
+
+      <!-- ✅ PLANTILLA (oculto por defecto) -->
+      <div id="stats-equipos-container" style="display: none">
+        <div class="loading-container" id="plantilla-loading">
+          <div class="loading-spinner">
+            <i class="bx bx-loader-alt bx-spin"></i>
+          </div>
+          <p>Cargando plantilla...</p>
+        </div>
+        <div id="plantilla-content"></div>
+      </div>
+
+      <!-- ✅ ESTADÍSTICAS (oculto por defecto) -->
+      <div id="stats-jugadores-container" style="display: none">
+        <div class="loading-container" id="stats-loading">
+          <div class="loading-spinner">
+            <i class="bx bx-loader-alt bx-spin"></i>
+          </div>
+          <p>Cargando estadísticas...</p>
+        </div>
+        <div id="stats-content"></div>
+      </div>
+    </main>
+
+    <!-- ✅ SCRIPTS EN EL ORDEN CORRECTO -->
+    <script src="/static/myapp/js/menu.js"></script>
+    <script src="/static/myapp/js/topnav.js"></script>
+    <script src="/static/myapp/js/config.js"></script>
+    <script src="/static/myapp/js/equipo_detalle.js"></script>
+
+    <!-- ✅ SCRIPT PARA CARGAR HEADER INMEDIATAMENTE -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar header
+        const headerContainer = document.getElementById('header-container');
+        if (headerContainer) {
+            headerContainer.innerHTML = `
+                <div class="header">
+                    <div class="page-header">
+                        <div class="page-icon-container">
+                            <i class="bx bx-football page-icon"></i>
+                        </div>
+                        <div class="page-info">
+                            <h1 class="page-title">Detalle del Equipo</h1>
+                            <p class="page-subtitle">/ Información Completa</p>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button class="refresh-btn" title="Actualizar">
+                            <i class="bx bx-refresh"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    </script>
+
+    <!-- TU SCRIPT ACTUAL SIN CAMBIOS -->
+    <script>
+// Variables globales
+window.equipoDetalleData = {
+    equipoId: null,
+    equipoNombre: null,
+    currentView: "info",
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("⚽ Página de equipo detalle cargada");
+
+    // Obtener ID del equipo desde URL
+    const path = window.location.pathname;
+    const match = path.match(/\/equipo_detalle\/(\d+)\//);
+    let equipoId = null;
+    
+    if (match) {
+        equipoId = match[1];
+    } else {
+        // Fallback para URLs con parámetros GET
+        const urlParams = new URLSearchParams(window.location.search);
+        equipoId = urlParams.get("id");
+    }
+
+    if (equipoId) {
+        window.equipoDetalleData.equipoId = equipoId;
+        console.log("✅ Equipo ID encontrado:", equipoId);
+        
+        // Cargar información inicial
+        cargarInfoEquipo(equipoId);
+
+        // Configurar botones después de que se cargue el topnav
+        setTimeout(() => {
+            setupEquipoDetalleButtons();
+        }, 500);
+    } else {
+        console.error("❌ ID de equipo no encontrado");
+        mostrarError("ID de equipo no encontrado en la URL");
+    }
+});
+
+function setupEquipoDetalleButtons() {
+    const btnTablas = document.getElementById("btn-tablas");
+    const btnStatsEquipo = document.getElementById("btn-stats-equipo");
+    const btnStatsJugadores = document.getElementById("btn-stats-jugadores");
+
+    console.log("🔧 Configurando botones equipo detalle:", {
+        btnTablas: !!btnTablas,
+        btnStatsEquipo: !!btnStatsEquipo,
+        btnStatsJugadores: !!btnStatsJugadores,
+    });
+
+    // Función para remover clases activas
+    function removeAllActive() {
+        btnTablas?.classList.remove("active");
+        btnStatsEquipo?.classList.remove("active");
+        btnStatsJugadores?.classList.remove("active");
+    }
+
+    // Botón Información
+    if (btnTablas) {
+        btnTablas.addEventListener("click", function (e) {
+            e.preventDefault();
+            console.log("📋 Botón Información clickeado");
+            removeAllActive();
+            btnTablas.classList.add("active");
+            showSection("info-container");
+            window.equipoDetalleData.currentView = "info";
+
+            if (!document.getElementById("info-content").innerHTML.trim()) {
+                cargarInfoEquipo(window.equipoDetalleData.equipoId);
+            }
+        });
+    }
+
+    // Botón Plantilla
+    if (btnStatsEquipo) {
+        btnStatsEquipo.addEventListener("click", function (e) {
+            e.preventDefault();
+            console.log("👥 Botón Plantilla clickeado");
+            removeAllActive();
+            btnStatsEquipo.classList.add("active");
+            showSection("stats-equipos-container");
+            window.equipoDetalleData.currentView = "plantilla";
+            cargarPlantilla(window.equipoDetalleData.equipoId);
+        });
+    }
+
+    // Botón Estadísticas
+    if (btnStatsJugadores) {
+        btnStatsJugadores.addEventListener("click", function (e) {
+            e.preventDefault();
+            console.log("📊 Botón Estadísticas clickeado");
+            removeAllActive();
+            btnStatsJugadores.classList.add("active");
+            showSection("stats-jugadores-container");
+            window.equipoDetalleData.currentView = "estadisticas";
+            cargarEstadisticas(window.equipoDetalleData.equipoId);
+        });
+    }
+
+    // Activar información por defecto
+    if (btnTablas) {
+        btnTablas.classList.add("active");
+    }
+}
+
+function hideAllSections() {
+    document.getElementById("info-container").style.display = "none";
+    document.getElementById("stats-equipos-container").style.display = "none";
+    document.getElementById("stats-jugadores-container").style.display = "none";
+}
+
+function showSection(sectionId) {
+    hideAllSections();
+    document.getElementById(sectionId).style.display = "block";
+    console.log(`✅ Mostrando sección: ${sectionId}`);
+}
+
+async function cargarInfoEquipo(equipoId) {
+    const loadingEl = document.getElementById("info-loading");
+    const contentEl = document.getElementById("info-content");
+
+    loadingEl.style.display = "block";
+    contentEl.innerHTML = "";
+
+    try {
+        console.log(`🔄 Cargando info equipo ID: ${equipoId}`);
+        
+        // ✅ URL CORREGIDA SIN ESPACIOS
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/info/`);
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        console.log("✅ Info equipo cargada:", data);
+        loadingEl.style.display = "none";
+        renderInfoEquipo(data);
+
+        // Actualizar datos globales
+        if (data.equipo && data.equipo.nombre) {
+            window.equipoDetalleData.equipoNombre = data.equipo.nombre;
+            document.title = `${data.equipo.nombre} | ScoutGine`;
+        }
+    } catch (error) {
+        console.error("❌ Error cargando info equipo:", error);
+        loadingEl.style.display = "none";
+        contentEl.innerHTML = `
+            <div class="error-message">
+                <h3>❌ Error cargando información</h3>
+                <p>${error.message}</p>
+                <button onclick="cargarInfoEquipo('${equipoId}')" class="retry-btn">Reintentar</button>
+            </div>
+        `;
+    }
+}
+
+async function cargarPlantilla(equipoId) {
+    const loadingEl = document.getElementById("plantilla-loading");
+    const contentEl = document.getElementById("plantilla-content");
+
+    loadingEl.style.display = "block";
+    contentEl.innerHTML = "";
+
+    try {
+        console.log(`🔄 Cargando plantilla equipo ID: ${equipoId}`);
+        
+        // ✅ URL CORREGIDA SIN ESPACIOS
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/plantilla/`);
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        console.log("✅ Plantilla cargada:", data);
+        loadingEl.style.display = "none";
+        renderPlantilla(data);
+    } catch (error) {
+        console.error("❌ Error cargando plantilla:", error);
+        loadingEl.style.display = "none";
+        contentEl.innerHTML = `
+            <div class="error-message">
+                <h3>❌ Error cargando plantilla</h3>
+                <p>${error.message}</p>
+                <button onclick="cargarPlantilla('${equipoId}')" class="retry-btn">Reintentar</button>
+            </div>
+        `;
+    }
+}
+
+async function cargarEstadisticas(equipoId) {
+    const loadingEl = document.getElementById("stats-loading");
+    const contentEl = document.getElementById("stats-content");
+
+    loadingEl.style.display = "block";
+    contentEl.innerHTML = "";
+
+    try {
+        console.log(`🔄 Cargando estadísticas equipo ID: ${equipoId}`);
+        
+        // ✅ URL CORREGIDA SIN ESPACIOS
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/estadisticas/`);
+        const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        console.log("✅ Estadísticas cargadas:", data);
+        loadingEl.style.display = "none";
+        renderEstadisticas(data);
+    } catch (error) {
+        console.error("❌ Error cargando estadísticas:", error);
+        loadingEl.style.display = "none";
+        contentEl.innerHTML = `
+            <div class="error-message">
+                <h3>❌ Error cargando estadísticas</h3>
+                <p>${error.message}</p>
+                <button onclick="cargarEstadisticas('${equipoId}')" class="retry-btn">Reintentar</button>
+            </div>
+        `;
+    }
+}
+
+// ✅ MANTENER TUS FUNCIONES DE RENDER SIN CAMBIOS
+function renderInfoEquipo(data) {
+        const equipo = data.equipo;
+        const wikipediaInfo = data.wikipedia_info || {};
+        const totalJugadores = data.total_jugadores || 0;
+
+        const contentEl = document.getElementById("info-content");
+
+        const infoHTML = `
+                <div class="equipo-detalle-container">
+                    <div class="equipo-header">
+                        ${
+                          equipo.logo
+                            ? `
+                            <img src="${equipo.logo}" alt="${equipo.nombre}" class="equipo-logo-grande">
+                        `
+                            : `
+                            <div class="equipo-logo-placeholder-grande">
+                                ${equipo.nombre.charAt(0).toUpperCase()}
+                            </div>
+                        `
+                        }
+                        
+                        <div class="equipo-info">
+                            <h1>${equipo.nombre}</h1>
+                            <p class="equipo-liga">${
+                              equipo.liga || "Primera División"
+                            }</p>
+                            
+                            ${
+                              wikipediaInfo.fundacion
+                                ? `
+                                <p class="equipo-fundacion">
+                                    <i class="bx bx-calendar"></i>
+                                    Fundado en ${wikipediaInfo.fundacion}
+                                </p>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              wikipediaInfo.estadio
+                                ? `
+                                <p class="equipo-estadio">
+                                    <i class="bx bx-map"></i>
+                                    ${wikipediaInfo.estadio}
+                                </p>
+                            `
+                                : ""
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="equipo-descripcion">
+                        <h3>
+                            <i class="bx bx-info-circle"></i>
+                            Acerca del club
+                        </h3>
+                        <p class="equipo-resumen">
+                            ${
+                              wikipediaInfo.resumen ||
+                              `
+                                ${
+                                  equipo.nombre
+                                } es un equipo de fútbol que compite en ${
+                                equipo.liga || "Primera División"
+                              }.
+                                ${
+                                  totalJugadores
+                                    ? `Cuenta con una plantilla de ${totalJugadores} jugadores.`
+                                    : ""
+                                }
+                            `
+                            }
+                        </p>
+                    </div>
+                    
+                    <!-- ✅ AGREGAR CARDS DE ESTADÍSTICAS USANDO CLASES EXISTENTES -->
+                    ${
+                      equipo.rating ||
+                      equipo.goles_promedio ||
+                      equipo.goles_concedidos_promedio ||
+                      equipo.posesion_promedio
+                        ? `
+                        <div class="stats-cards">
+                            ${
+                              equipo.rating
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.rating}</div>
+                                    <div class="stat-label">Rating</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              equipo.goles_promedio
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.goles_promedio}</div>
+                                    <div class="stat-label">Goles por Partido</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              equipo.goles_concedidos_promedio
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.goles_concedidos_promedio}</div>
+                                    <div class="stat-label">Goles Concedidos</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              equipo.vallas_invictas
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.vallas_invictas}</div>
+                                    <div class="stat-label">Vallas Invictas</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              equipo.posesion_promedio
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.posesion_promedio}%</div>
+                                    <div class="stat-label">Posesión</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                            
+                            ${
+                              equipo.tiros_arco_promedio
+                                ? `
+                                <div class="stat-card">
+                                    <div class="stat-value">${equipo.tiros_arco_promedio}</div>
+                                    <div class="stat-label">Tiros al Arco</div>
+                                </div>
+                            `
+                                : ""
+                            }
+                        </div>
+                    `
+                        : ""
+                    }
+                </div>
+            `;
+
+        contentEl.innerHTML = infoHTML;
+      }
+
+      function renderPlantilla(data) {
+        // ✅ CORREGIR ACCESO A DATOS
+        const equipoNombre = data.equipo_nombre;
+        const jugadores = data.jugadores || [];
+        const totalJugadores = jugadores.length;
+
+        const contentEl = document.getElementById("plantilla-content");
+
+        let plantillaHTML = `
+        <div class="jugadores-lista-container">
+            <div class="header-content">
+                <i class="bx bx-group" style="font-size: 2rem; color: #67aaff;"></i>
+                <h2 class="plantilla-titulo">${equipoNombre} - Plantilla (${totalJugadores} jugadores)</h2>
+            </div>
+    `;
+
+        if (totalJugadores > 0) {
+            plantillaHTML += `
+            <div class="jugadores-tabla">
+                <div class="jugadores-tabla-header">
+                    <div class="jugador-th">Nombre</div>
+                    <div class="jugador-th">Posición</div>
+                    <div class="jugador-th">Nacionalidad</div>
+                    <div class="jugador-th">Edad</div>
+                    <div class="jugador-th">#</div>
+                    <div class="jugador-th">Altura</div>
+                    <div class="jugador-th">Valor</div>
+                </div>
+        `;
+
+            jugadores.forEach((jugador) => {
+                // Formatear valor de mercado
+                let valorFormateado = "N/A";
+                if (jugador.valor_mercado && jugador.valor_mercado > 0) {
+                    if (jugador.valor_mercado >= 1000000) {
+                        valorFormateado = `€${(jugador.valor_mercado / 1000000).toFixed(1)}M`;
+                    } else if (jugador.valor_mercado >= 1000) {
+                        valorFormateado = `€${(jugador.valor_mercado / 1000).toFixed(0)}K`;
+                    } else {
+                        valorFormateado = `€${jugador.valor_mercado}`;
+                    }
+                }
+
+                // Badge de posición
+                let posicionBadge = "";
+                const posicionLower = (jugador.posicion || "").toLowerCase();
+                if (posicionLower.includes("arq") || posicionLower.includes("gk")) {
+                    posicionBadge = `<span class="pos-tag arquero"><i class='bx bx-shield'></i> ARQ</span>`;
+                } else if (posicionLower.includes("def")) {
+                    posicionBadge = `<span class="pos-tag defensor"><i class='bx bx-shield-quarter'></i> DEF</span>`;
+                } else if (posicionLower.includes("med") || posicionLower.includes("mid")) {
+                    posicionBadge = `<span class="pos-tag mediocampista"><i class='bx bx-target-lock'></i> MED</span>`;
+                } else if (posicionLower.includes("del") || posicionLower.includes("att")) {
+                    posicionBadge = `<span class="pos-tag delantero"><i class='bx bx-football'></i> DEL</span>`;
+                } else {
+                    posicionBadge = `<span class="pos-tag"><i class='bx bx-user'></i> ${(jugador.posicion || "POS").substring(0, 3).toUpperCase()}</span>`;
+                }
+
+                plantillaHTML += `
+                <div class="jugador-row">
+                    <div class="jugador-td">
+                        <a href="/jugador/${jugador.id}/" class="jugador-link">
+                            ${jugador.nombre}
+                        </a>
+                    </div>
+                    <div class="jugador-td">${posicionBadge}</div>
+                    <div class="jugador-td">
+                        ${jugador.nacionalidad || "N/A"}
+                    </div>
+                    <div class="jugador-td">${jugador.edad || "N/A"}</div>
+                    <div class="jugador-td">${jugador.dorsal || "N/A"}</div>
+                    <div class="jugador-td">${jugador.altura ? jugador.altura + " cm" : "N/A"}</div>
+                    <div class="jugador-td">${valorFormateado}</div>
+                </div>
+            `;
+            });
+
+            plantillaHTML += `
+                </div>
+            </div>
+        `;
+        } else {
+            plantillaHTML += `
+            <div style="text-align: center; padding: 60px 20px; color: #a6b6d9;">
+                <div style="font-size: 4rem; color: #6c7a89; margin-bottom: 20px;">
+                    <i class='bx bx-user-x'></i>
+                </div>
+                <h3>Sin jugadores</h3>
+                <p>Este equipo no tiene jugadores registrados.</p>
+            </div>
+        `;
+        }
+
+        plantillaHTML += "</div>";
+        contentEl.innerHTML = plantillaHTML;
+      }
+
+      function renderEstadisticas(data) {
+    const equipoNombre = data.equipo_nombre;
+    const stats = data.stats;
+    const contentEl = document.getElementById("stats-content");
+
+    if (!stats || Object.keys(stats).length === 0) {
+        contentEl.innerHTML = `
+            <div class="equipo-stats-empty-simple">
+                <i class="bx bx-info-circle" style="font-size: 3rem; color: #6c7a89; margin-bottom: 15px;"></i>
+                <h3>Sin estadísticas</h3>
+                <p>No hay estadísticas disponibles para este equipo.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Mapeo de nombres técnicos a nombres amigables
+    const statLabels = {
+        // Ofensivos
+        'goals_per_match': 'Goles por partido',
+        'shots_on_target_per_match': 'Tiros al arco por partido',
+        'big_chances_created': 'Ocasiones claras creadas',
+        'fotmob_rating': 'Rating FotMob',
+        
+        // Defensivos
+        'goals_conceded_per_match': 'Goles concedidos por partido',
+        'clean_sheets': 'Vallas invictas',
+        'saves_per_match': 'Atajadas por partido',
+        'tackles_per_match': 'Entradas por partido',
+        
+        // Creación
+        'passes_per_match': 'Pases por partido',
+        'accurate_passes_percentage': 'Precisión de pases (%)',
+        'corners_per_match': 'Córners por partido',
+        'crosses_per_match': 'Centros por partido',
+        
+        // Generales
+        'average_possession': 'Posesión promedio (%)',
+        'fouls_per_match': 'Faltas por partido',
+        'yellow_cards_per_match': 'Tarjetas amarillas por partido',
+        'red_cards_per_match': 'Tarjetas rojas por partido'
+    };
+
+    // Configuración de categorías
+    const categorias = {
+        ofensivos: {
+            title: "🔴 Ofensivos",
+            className: "ofensivos",
+            stats: stats.ofensivos || {}
+        },
+        defensivos: {
+            title: "🟢 Defensivos", 
+            className: "defensivos",
+            stats: stats.defensivos || {}
+        },
+        creacion: {
+            title: "🟨 Creación",
+            className: "creacion", 
+            stats: stats.creacion || {}
+        },
+        generales: {
+            title: "🔵 Generales",
+            className: "generales",
+            stats: stats.generales || {}
+        }
+    };
+
+    let estadisticasHTML = `
+        <div class="equipo-stats-full">
+            <div class="header-content" style="margin-bottom: 30px;">
+                <i class="bx bx-bar-chart-alt-2" style="font-size: 2rem; color: #67aaff;"></i>
+                <h2 class="plantilla-titulo">${equipoNombre} - Estadísticas</h2>
+            </div>
+            <div class="equipo-stats-categorias">
+    `;
+
+    Object.entries(categorias).forEach(([categoria, config]) => {
+        const statsCategoria = config.stats;
+        const statsExistentes = Object.entries(statsCategoria).filter(([key, value]) => 
+            value !== null && value !== undefined && value !== ''
+        );
+
+        if (statsExistentes.length > 0) {
+            estadisticasHTML += `
+                <div class="equipo-stats-col">
+                    <div class="equipo-stats-col-title ${config.className}">${config.title}</div>
+                    <table class="equipo-stats-table">
+                        <tbody>
+            `;
+
+            statsExistentes.forEach(([statKey, statValue]) => {
+                const labelAmigable = statLabels[statKey] || statKey.replace(/_/g, ' ').toUpperCase();
+                
+                // Formatear valor
+                let valorFormateado = statValue;
+                if (typeof statValue === 'number') {
+                    if (statKey.includes('percentage') || statKey.includes('possession')) {
+                        valorFormateado = `${statValue.toFixed(1)}%`;
+                    } else if (statValue % 1 !== 0) {
+                        valorFormateado = statValue.toFixed(2);
+                    }
+                }
+
+                estadisticasHTML += `
+                    <tr class="equipo-stat-row">
+                        <td class="stat-label-simple">${labelAmigable}</td>
+                        <td class="stat-value-simple">${valorFormateado}</td>
+                    </tr>
+                `;
+            });
+
+            estadisticasHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+    });
+
+    estadisticasHTML += `
+            </div>
+        </div>
+    `;
+
+    contentEl.innerHTML = estadisticasHTML;
+}
+
+      function mostrarError(mensaje) {
+        document.getElementById("info-container").innerHTML = `
+        <div class="error-message">
+            <h3>❌ Error</h3>
+            <p>${mensaje}</p>
+            <a href="/equipo/" class="retry-btn">Volver a Equipos</a>
+        </div>
+    `;
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}">  <!-- ✅ AGREGAR ESTA LÍNEA -->
+    <title>ScoutGine | Comparación</title>
+    
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css"
+    />
+    
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.noStyle.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <link rel="stylesheet" href="static/myapp/css/statsequipo.css" />
+    <link rel="stylesheet" href="static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="static/myapp/css/ligas.css" />
+    <link rel="stylesheet" href="static/myapp/css/topnav.css" />
+    <link rel="stylesheet" href="static/myapp/css/comparacion.css" />
+    
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+</head>
+
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <!-- LOADING INICIAL -->
+    <div id="loading-comparacion" class="loading-container">
+        <div class="loading-spinner">
+            <i class='bx bx-loader-alt bx-spin'></i>
+        </div>
+        <p>Cargando datos de comparación...</p>
+    </div>
+
+    <!-- COMPARACIÓN DE EQUIPOS -->
+    <div class="comparacion-container" id="equipos-comparacion-container" style="display: none;">
+        <h2>Comparar Equipos</h2>
+        
+        <!-- ✅ CONTROLES SUPERIORES PARA EQUIPOS -->
+        <div class="controles-superiores-equipos">
+            <!-- ✅ SELECTOR DE GRUPO -->
+            <div class="controles-filtros">
+                <div class="grupo-select-container">
+                    <label for="grupo-select-equipos">Grupo de estadísticas:</label>
+                    <select name="grupo" id="grupo-select-equipos" required>
+                        <option value="">Selecciona grupo</option>
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ BOTONES DE MODO -->
+            <div class="botones-modo">
+                <button type="button" id="btn-graficos-equipos" class="modo-btn modo-activo">
+                    <i class="bx bx-bar-chart-alt-2"></i> Gráficos
+                </button>
+                <button type="button" id="btn-estadisticas-equipos" class="modo-btn">
+                    <i class="bx bx-table"></i> Estadísticas
+                </button>
+            </div>
+        </div>
+
+        <!-- ✅ AGREGAR SELECTORES DE EQUIPOS -->
+        <div class="comparacion-flex">
+            <!-- SELECTOR EQUIPO 1 -->
+            <div class="equipo-selector">
+                <label for="equipo1-select">Equipo 1</label>
+                <select id="equipo1-select" required>
+                    <option value="">Selecciona equipo</option>
+                    <!-- Se llena dinámicamente -->
+                </select>
+            </div>
+
+            <!-- CENTRO: CONTROLES Y GRÁFICO -->
+            <div class="radar-center">
+                <!-- ✅ CONTENEDOR PARA EL GRÁFICO RADAR -->
+                <div id="radar-comparacion-equipos" style="width: 100%; height: 420px; display: block;"></div>
+                
+                <!-- ✅ CONTENEDOR PARA LA TABLA DE ESTADÍSTICAS (INICIALMENTE OCULTO) -->
+                <div id="estadisticas-comparacion-equipos" style="display: none;"></div>
+            </div>
+
+            <!-- SELECTOR EQUIPO 2 -->
+            <div class="equipo-selector">
+                <label for="equipo2-select">Equipo 2</label>
+                <select id="equipo2-select" required>
+                    <option value="">Selecciona equipo</option>
+                    <!-- Se llena dinámicamente -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARACIÓN DE JUGADORES -->
+    <div class="comparacion-container" id="jugadores-comparacion-container" style="display: none;">
+        <h2>Comparar Jugadores</h2>
+        
+        <!-- ✅ CONTROLES SUPERIORES PARA JUGADORES -->
+        <div class="controles-superiores-jugadores">
+            <!-- ✅ SELECTOR DE GRUPO Y POSICIÓN -->
+            <div class="controles-filtros">
+                <div class="grupo-select-container">
+                    <label for="grupo-select-jugadores">Grupo de estadísticas:</label>
+                    <select name="grupo" id="grupo-select-jugadores" required>
+                        <option value="">Selecciona grupo</option>
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+                
+                <div class="posicion-select-container">
+                    <label for="posicion-select-jugadores">Posición:</label>
+                    <select name="posicion" id="posicion-select-jugadores">
+                        <option value="">Todas las posiciones</option>
+                        <option value="GK">Arquero (GK)</option>
+                        <option value="RB">Lateral Derecho (RB)</option>
+                        <option value="CB">Defensor Central (CB)</option>
+                        <option value="LB">Lateral Izquierdo (LB)</option>
+                        <option value="Defender">Defensor</option>
+                        <option value="DM">Mediocampista Defensivo (DM)</option>
+                        <option value="CM">Mediocampista Central (CM)</option>
+                        <option value="RM">Mediocampista Derecho (RM)</option>
+                        <option value="LM">Mediocampista Izquierdo (LM)</option>
+                        <option value="AM">Mediocampista Ofensivo (AM)</option>
+                        <option value="Midfielder">Mediocampista</option>
+                        <option value="RW">Extremo Derecho (RW)</option>
+                        <option value="LW">Extremo Izquierdo (LW)</option>
+                        <option value="ST">Delantero (ST)</option>
+                        <option value="Attacker">Delantero</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ✅ BOTONES DE MODO -->
+            <div class="botones-modo">
+                <button type="button" id="btn-graficos-jugadores" class="modo-btn modo-activo">
+                    <i class="bx bx-bar-chart-alt-2"></i> Gráficos
+                </button>
+                <button type="button" id="btn-estadisticas-jugadores" class="modo-btn">
+                    <i class="bx bx-table"></i> Estadísticas
+                </button>
+            </div>
+        </div>
+
+        <!-- ✅ AGREGAR SELECTORES DE JUGADORES -->
+        <div class="comparacion-flex">
+            <!-- SELECTOR JUGADOR 1 -->
+            <div class="jugador-selector">
+                <!-- Filtros de equipo para jugador 1 -->
+                <div class="filtros-jugador">
+                    <label for="equipo-jugador1-select">Equipo</label>
+                    <select id="equipo-jugador1-select" required>
+                        <option value="">Selecciona equipo</option>
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+                
+                <!-- Selector específico de jugador 1 -->
+                <div class="selector-jugador">
+                    <label for="jugador1-select">Jugador 1</label>
+                    <select id="jugador1-select" disabled>
+                        <option value="">Primero selecciona equipo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- CENTRO: CONTROLES Y GRÁFICO -->
+            <div class="radar-center">
+                <!-- ✅ CONTENEDOR PARA EL GRÁFICO RADAR -->
+                <div id="radar-comparacion-jugadores" style="width: 100%; height: 420px; display: block;"></div>
+                
+                <!-- ✅ CONTENEDOR PARA LA TABLA DE ESTADÍSTICAS (INICIALMENTE OCULTO) -->
+                <div id="estadisticas-comparacion-jugadores" style="display: none;"></div>
+            </div>
+
+            <!-- SELECTOR JUGADOR 2 -->
+            <div class="jugador-selector">
+                <!-- Filtros de equipo para jugador 2 -->
+                <div class="filtros-jugador">
+                    <label for="equipo-jugador2-select">Equipo</label>
+                    <select id="equipo-jugador2-select" required>
+                        <option value="">Selecciona equipo</option>
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+                
+                <!-- Selector específico de jugador 2 -->
+                <div class="selector-jugador">
+                    <label for="jugador2-select">Jugador 2</label>
+                    <select id="jugador2-select" disabled>
+                        <option value="">Primero selecciona equipo</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="error-comparacion" class="error-message" style="display: none;">
+        <i class="bx bx-error"></i>
+        <span id="error-message-text">Error cargando datos</span>
+        <button onclick="cargarDatosComparacion()" class="retry-btn">Reintentar</button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/myapp/js/config.js"></script>
+    <script src="/static/myapp/js/header.js"></script>
+    <script src="/static/myapp/js/comparacion.js"></script>
+
+    <script>
+        // ✅ SCRIPT MÍNIMO PARA HEADER
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('⚖️ Página de comparación cargada');
+            
+            const headerContainer = document.getElementById('header-container');
+            if (headerContainer) {
+                headerContainer.innerHTML = `
+                    <div class="header">
+                        <div class="page-header">
+                            <div class="page-icon-container">
+                                <i class="bx bx-football page-icon"></i>
+                            </div>
+                            <div class="page-info">
+                                <h1 class="page-title">Comparación</h1>
+                                <p class="page-subtitle">/ Equipos y Jugadores</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

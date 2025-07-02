@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estadísticas de Jugador | ScoutGine</title>
+    
+    <link rel="stylesheet" href="static/myapp/css/estadistica_jugador.css" />
+    <link rel="stylesheet" href="static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="static/myapp/css/topnav.css" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+    
+    <div class="main-container">
+        <!-- LOADING INICIAL -->
+        <div id="loading-estadisticas" class="loading-container">
+            <div class="loading-spinner">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+            <p>Cargando estadísticas del jugador...</p>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL (inicialmente oculto) -->
+        <div id="estadisticas-content" style="display: none;">
+            <!-- HEADER HERO -->
+            <div class="hero-section">
+                <div class="hero-background"></div>
+                <div class="hero-content">
+                    <a href="#" id="btn-back" class="btn-back">
+                        <i class="bx bx-arrow-back"></i>
+                        <span>Volver</span>
+                    </a>
+                    <div class="hero-info">
+                        <div class="player-avatar" id="player-avatar">
+                            <!-- Se carga dinámicamente -->
+                        </div>
+                        <div class="hero-text">
+                            <div class="name-dorsal-container">
+                                <h1 class="dorsal-colo" id="jugador-nombre">Cargando...</h1>
+                                <span class="player-dorsal" id="jugador-dorsal"></span>
+                            </div>
+                            <p class="stat-name" id="estadistica-nombre">Estadística</p>
+                            <div class="team-info">
+                                <div class="team-details">
+                                    <div class="position-info" id="position-info">
+                                        <!-- Posiciones se cargan dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-hero">
+                        <div class="stat-hero-card">
+                            <div class="stat-value" id="stat-value-actual">N/A</div>
+                            <div class="stat-label">Actual</div>
+                        </div>
+                        <div class="stat-hero-card">
+                            <div class="stat-value" id="stat-value-promedio">N/A</div>
+                            <div class="stat-label">Promedio Liga</div>
+                        </div>
+                        <div class="stat-hero-card">
+                            <div class="stat-value" id="stat-value-percentil">N/A</div>
+                            <div class="stat-label">Percentil</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICOS GRID -->
+            <div class="charts-grid">
+                <!-- RADAR CHART -->
+                <div class="chart-card radar-card">
+                    <div class="chart-header">
+                        <h3><i class="bx bx-radar"></i> Análisis de Rendimiento</h3>
+                        <div class="chart-controls">
+                            <select id="radar-jugador-group-selector" class="control-select">
+                                <option value="ofensivos">🔴 Ofensivos</option>
+                                <option value="defensivos">🛡️ Defensivos</option>
+                                <option value="creacion">⚡ Creación</option>
+                                <option value="arquero">🥅 Arquero</option>
+                            </select>
+                            <select id="posicion-jugador-selector" class="control-select" style="display: none"></select>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <div id="radar-jugador-chart-container"></div>
+                    </div>
+                </div>
+
+                <!-- BOXPLOT CHART -->
+                <div class="chart-card boxplot-card">
+                    <div class="chart-header">
+                        <h3><i class="bx bx-bar-chart-square"></i> Distribución</h3>
+                        <div class="chart-controls">
+                            <label for="posicion-boxplot-selector">Posición:</label>
+                            <select id="posicion-boxplot-selector" class="control-select"></select>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <div id="boxplot-jugador-chart-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO DE DISPERSIÓN -->
+            <div class="chart-card scatter-card">
+                <div class="chart-header">
+                    <h3><i class="bx bx-scatter-chart"></i> Análisis de Dispersión</h3>
+                    <div class="chart-controls">
+                        <label for="posicion-dispersion-selector">Posición:</label>
+                        <select id="posicion-dispersion-selector" class="control-select"></select>
+                        <label for="stat-y-selector">Eje Y:</label>
+                        <select id="stat-y-selector" class="control-select"></select>
+                    </div>
+                </div>
+                <div class="chart-content scatter-content">
+                    <div id="chart-dispersion-jugador"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div id="error-estadisticas" class="error-message" style="display: none;">
+            <h3>❌ Error cargando estadísticas</h3>
+            <p id="error-message-text"></p>
+            <button onclick="cargarEstadisticas()" class="retry-btn">Reintentar</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    
+    <script>
+        // Variables globales
+        window.jugadorData = {
+            jugadorId: null,
+            jugadorNombre: null,
+            estadistica: null,
+            datosGrafico: null
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📊 Página de estadísticas cargada');
+            
+            // Obtener parámetros de URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const jugadorId = urlParams.get('jugador');
+            const estadistica = urlParams.get('stat');
+            
+            if (jugadorId && estadistica) {
+                window.jugadorData.jugadorId = jugadorId;
+                window.jugadorData.estadistica = estadistica;
+                
+                cargarEstadisticas();
+            } else {
+                mostrarError('Parámetros de URL faltantes. Se requiere jugador y estadística.');
+            }
+        });
+
+        async function cargarEstadisticas() {
+            const loadingEl = document.getElementById('loading-estadisticas');
+            const contentEl = document.getElementById('estadisticas-content');
+            const errorEl = document.getElementById('error-estadisticas');
+            
+            // Mostrar loading
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            try {
+                const { jugadorId, estadistica } = window.jugadorData;
+                
+                // Llamada a la API para obtener datos del jugador y estadísticas
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/jugador/${jugadorId}/estadistica/${encodeURIComponent(estadistica)}/`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Actualizar datos globales
+                window.jugadorData.jugadorNombre = data.jugador.nombre;
+                window.jugadorData.datosGrafico = data.datos_grafico;
+                
+                // Ocultar loading y mostrar contenido
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+                
+                // Renderizar datos
+                renderJugadorInfo(data);
+                renderEstadisticas(data);
+                
+                // Actualizar título de la página
+                document.title = `${estadistica} - ${data.jugador.nombre} | ScoutGine`;
+                
+                // Cargar script de estadísticas si existe
+                if (typeof initEstadisticaJugador === 'function') {
+                    initEstadisticaJugador();
+                }
+                
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                mostrarError(error.message);
+            }
+        }
+
+        function renderJugadorInfo(data) {
+            const jugador = data.jugador;
+            const equipo = data.equipo;
+            const estadistica = data.estadistica;
+            
+            // Actualizar nombre y dorsal
+            document.getElementById('jugador-nombre').textContent = jugador.nombre;
+            document.getElementById('estadistica-nombre').textContent = estadistica;
+            
+            if (jugador.dorsal) {
+                document.getElementById('jugador-dorsal').textContent = jugador.dorsal;
+                document.getElementById('jugador-dorsal').style.display = 'inline';
+            }
+            
+            // Actualizar avatar
+            const avatarContainer = document.getElementById('player-avatar');
+            if (jugador.foto) {
+                avatarContainer.innerHTML = `<img src="${jugador.foto}" alt="${jugador.nombre}" />`;
+            } else if (equipo && equipo.logo) {
+                avatarContainer.innerHTML = `
+                    <div class="avatar-placeholder">
+                        <img src="${equipo.logo}" alt="${equipo.nombre}" class="team-logo-avatar" />
+                    </div>
+                `;
+            } else {
+                avatarContainer.innerHTML = `
+                    <div class="avatar-placeholder">
+                        <div class="team-initial">${equipo ? equipo.nombre.charAt(0) : jugador.nombre.charAt(0)}</div>
+                    </div>
+                `;
+            }
+            
+            // Actualizar posiciones
+            const positionContainer = document.getElementById('position-info');
+            let positionsHTML = '';
+            
+            if (jugador.posicion) {
+                positionsHTML += `<span class="position-tag">${jugador.posicion}</span>`;
+            }
+            if (jugador.posicion_secundaria) {
+                positionsHTML += `<span class="position-tag secondary">${jugador.posicion_secundaria}</span>`;
+            }
+            
+            positionContainer.innerHTML = positionsHTML;
+            
+            // Configurar botón de volver
+            const btnBack = document.getElementById('btn-back');
+            btnBack.href = `jugador_detalle.html?id=${jugador.id}`;
+        }
+
+        function renderEstadisticas(data) {
+            const stats = data.estadisticas_hero;
+            
+            // Actualizar valores hero
+            document.getElementById('stat-value-actual').textContent = stats?.valor_actual || 'N/A';
+            document.getElementById('stat-value-promedio').textContent = stats?.promedio_liga || 'N/A';
+            
+            const percentil = stats?.percentil;
+            if (percentil !== null && percentil !== undefined) {
+                document.getElementById('stat-value-percentil').textContent = `${percentil}%`;
+            }
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('loading-estadisticas').style.display = 'none';
+            document.getElementById('estadisticas-content').style.display = 'none';
+            
+            const errorEl = document.getElementById('error-estadisticas');
+            document.getElementById('error-message-text').textContent = mensaje;
+            errorEl.style.display = 'block';
+        }
+
+        // Función para uso del script de estadísticas
+        function initEstadisticaJugador() {
+            // Esta función será llamada por estadistica_jugador.js
+            console.log('🎯 Inicializando gráficos de estadísticas');
+            
+            // Aquí se pueden inicializar los gráficos con los datos cargados
+            if (window.jugadorData.datosGrafico) {
+                // Inicializar gráficos específicos
+                console.log('📊 Datos de gráfico disponibles:', window.jugadorData.datosGrafico);
+            }
+        }
+    </script>
+    
+    <!-- Script específico de estadísticas (si existe) -->
+    <script src="static/myapp/js/estadistica_jugador.js"></script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<aside class="sidebar" id="sidebar">
+  <div class="logo-menu">
+    <img
+      src="https://res.cloudinary.com/dgc07kho5/image/upload/v1746370646/image__2_-removebg-preview_u7jt6u.png"
+      alt="ScoutGine Logo"
+      class="logo-icon"
+    />
+    <span class="logo-text">ScoutGine</span>
+  </div>
+
+  <div class="menu">
+    <ul class="menu-links">
+      <!-- Dashboard -->
+      <li class="nav-link">
+        <a href="menu.html">
+          <i class="bx bx-home-alt"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      
+      <!-- Ligas -->
+      <li class="nav-link">
+        <a href="ligas.html">
+          <i class="bx bx-trophy"></i>
+          <span>Ligas</span>
+        </a>
+      </li>
+      
+      <!-- Equipos -->
+      <li class="nav-link">
+        <a href="equipo.html">
+          <i class="bx bx-football"></i>
+          <span>Equipos</span>
+        </a>
+      </li>
+      
+      <!-- Comparación -->
+      <li class="nav-link">
+        <a href="comparacion.html">
+          <i class="bx bx-scatter-chart"></i>
+          <span>Comparación</span>
+        </a>
+      </li>
+      
+      <!-- Recomendaciones -->
+      <li class="nav-link">
+        <a href="recomendacion.html">
+          <i class="bx bx-search-alt-2"></i>
+          <span>Recomendaciones</span>
+        </a>
+      </li>
+      
+      <!-- Club favorito -->
+      <li class="nav-link">
+        <a href="#" onclick="alert('Próximamente - Club favorito')">
+          <i class="bx bx-badge-check"></i>
+          <span>Club favorito</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</aside>
+
+<style>
+/* Estilos para el sidebar */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 60px;
+  background-color: #0a0a0f;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar:hover {
+  width: 250px;
+}
+
+.logo-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-decoration: none;
+  color: white;
+  min-height: 60px;
+  position: relative;
+  transition: justify-content 0.3s ease;
+}
+
+.logo-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.1s ease 0s, visibility 0.1s ease 0s;
+}
+
+.logo-text {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  position: absolute;
+  left: 20px;
+  opacity: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  transition: opacity 0.1s ease 0.2s, visibility 0.1s ease 0.2s;
+}
+
+.sidebar:hover .logo-icon {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.sidebar:hover .logo-text {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sidebar:hover .logo-menu {
+  justify-content: flex-start;
+}
+
+.menu {
+  padding: 20px 0;
+}
+
+.menu-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-link {
+  list-style: none;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.menu a:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.nav-link.active > a {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border-left: 3px solid #4CAF50;
+}
+
+.menu a i {
+  font-size: 20px;
+  min-width: 20px;
+  margin-right: 15px;
+  text-align: center;
+}
+
+.menu a span {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar:hover .menu a span {
+  opacity: 1;
+  visibility: visible;
+}
+</style>

@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // CONFIGURAR BOTONES DE NAVEGACIÓN
     setupNavButtons();
+    
+    // CARGAR NAVBAR SUPERIOR
+    loadTopNav();
 });
 
 // Función para configurar los botones de navegación
@@ -622,10 +625,180 @@ function updatePageHeader(icon, title, subtitle) {
     }
 }
 
+// CARGA EL NAVBAR SUPERIOR
+function loadTopNav() {
+    const topnavContainer = document.getElementById('topnav-container');
+    if (!topnavContainer) return;
+
+    const currentPage = getCurrentPageName();
+    const topnavHTML = getTopNavForPage(currentPage);
+    
+    topnavContainer.innerHTML = topnavHTML;
+    topnavContainer.className = 'topnav'; // Agregar clase CSS
+}
+
+function getCurrentPageName() {
+    const path = window.location.pathname;
+    const filename = path.split('/').pop().replace('.html', '');
+    return filename || 'index';
+}
+
+function getTopNavForPage(pageName) {
+    const topnavConfigs = {
+        'ligas': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar..." class="topnav-search-input">
+            </div>
+            <div class="top-nav-actions">
+                <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
+                <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipo</a>
+                <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Stats Jugadores</a>
+            </div>
+        `,
+        
+        // ✅ CONFIGURACIÓN PARA EQUIPO DETALLE
+        'equipo_detalle': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
+            </div>
+            <div class="top-nav-actions">
+                <a href="#" id="btn-tablas" class="nav-action-btn active">Información</a>
+                <a href="#" id="btn-stats-equipo" class="nav-action-btn">Plantilla</a>
+                <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Estadísticas</a>
+            </div>
+        `,
+        
+        'equipo': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar equipos..." class="topnav-search-input">
+            </div>
+        `,
+        
+        'menu': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar..." class="topnav-search-input">
+            </div>
+        `,
+        
+        'comparacion': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar..." class="topnav-search-input">
+            </div>
+            <div class="top-nav-actions">
+                <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
+                <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
+            </div>
+        `,
+        
+        'jugador_detalle': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar jugador..." class="topnav-search-input">
+            </div>
+            <div class="top-nav-actions">
+                <a href="#" id="btn-info" class="nav-action-btn active">Información</a>
+                <a href="#" id="btn-stats" class="nav-action-btn">Estadísticas</a>
+            </div>
+        `,
+        
+        'recomendacion': `
+            <div class="topnav-searchbar">
+                <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
+            </div>
+        `
+    };
+
+    return topnavConfigs[pageName] || `
+        <div class="topnav-searchbar">
+            <input type="text" placeholder="Buscar..." class="topnav-search-input">
+        </div>
+    `;
+}
+
+function initTopNavEvents() {
+    // Eventos para botones de navegación
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('nav-action-btn')) {
+            e.preventDefault();
+            
+            // Remover active de todos los botones
+            document.querySelectorAll('.nav-action-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Agregar active al botón clickeado
+            e.target.classList.add('active');
+            
+            // Manejar acción específica
+            handleNavAction(e.target.id);
+        }
+    });
+    
+    // Evento para búsqueda
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('topnav-search-input')) {
+            handleSearch(e.target.value);
+        }
+    });
+}
+
+function handleNavAction(actionId) {
+    const currentPage = getCurrentPageName();
+    
+    console.log(`Acción: ${actionId} en página: ${currentPage}`);
+    
+    // Despachar eventos personalizados para cada página
+    switch(currentPage) {
+        case 'ligas':
+            handleLigasAction(actionId);
+            break;
+        case 'comparacion':
+            handleComparacionAction(actionId);
+            break;
+        case 'equipo':
+            handleEquipoAction(actionId);
+            break;
+    }
+}
+
+function handleLigasAction(actionId) {
+    const event = new CustomEvent('ligasNavAction', { 
+        detail: { action: actionId } 
+    });
+    document.dispatchEvent(event);
+}
+
+function handleComparacionAction(actionId) {
+    const event = new CustomEvent('comparacionNavAction', { 
+        detail: { action: actionId } 
+    });
+    document.dispatchEvent(event);
+}
+
+function handleEquipoAction(actionId) {
+    const event = new CustomEvent('equipoNavAction', { 
+        detail: { action: actionId } 
+    });
+    document.dispatchEvent(event);
+}
+
+function handleSearch(searchTerm) {
+    const currentPage = getCurrentPageName();
+    const event = new CustomEvent('topnavSearch', { 
+        detail: { term: searchTerm, page: currentPage } 
+    });
+    document.dispatchEvent(event);
+}
+
 // Exportar funciones para uso global
 window.HeaderManager = {
     updatePageHeader,
     markActiveMenuItem
+};
+
+window.TopNavManager = {
+    loadTopNav,
+    handleNavAction,
+    getCurrentPageName
 };
 
 console.log("=== TOPNAV.JS INICIALIZADO ===");

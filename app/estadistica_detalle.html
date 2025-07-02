@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estadística | ScoutGine</title>
+    
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <!-- ✅ CSS PATHS (líneas 8-10) -->
+    <link rel="stylesheet" href="/static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="/static/myapp/css/topnav.css" />
+    <link rel="stylesheet" href="/static/myapp/css/estadistica_detalle.css" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.0/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <main class="main-content">
+        <!-- LOADING INICIAL -->
+        <div id="loading-estadistica" class="loading-container">
+            <div class="loading-spinner">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+            <p>Cargando estadística del equipo...</p>
+        </div>
+
+        <!-- CONTENIDO PRINCIPAL (inicialmente oculto) -->
+        <div id="estadistica-content" style="display: none;">
+            <!-- HEADER -->
+            <div class="estadistica-header">
+                <a href="#" id="back-button" class="back-button">
+                    <i class="bx bx-arrow-back"></i>
+                    Volver al equipo
+                </a>
+                <h1 class="estadistica-title" id="estadistica-title">Estadística</h1>
+                <div class="equipo-info" id="equipo-info">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+
+            <!-- CARDS DE ESTADÍSTICAS MINI -->
+            <div class="estadistica-stats-container">
+                <div class="estadistica-stats-inner">
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-value-actual">N/A</div>
+                        <div class="stat-label">Actual</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-value-promedio">N/A</div>
+                        <div class="stat-label">Promedio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="stat-value-posicion">N/A</div>
+                        <div class="stat-label">Posición</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO RADAR Y BOXPLOT -->
+            <div class="graficos-superiores">
+                <!-- Radar -->
+                <div class="grafico-superior-card">
+                    <div style="margin-bottom:12px;">
+                        <select id="radar-group-selector" class="grafico-dispersion-select">
+                            <option value="ofensivos">Ofensivos</option>
+                            <option value="defensivos">Defensivos</option>
+                            <option value="creacion">Creación</option>
+                            <option value="generales">Generales</option>
+                        </select>
+                    </div>
+                    <div id="radar-chart-container" style="width:100%;height:340px;background:#181b23;border-radius:12px;"></div>
+                </div>
+                
+                <!-- Boxplot -->
+                <div class="grafico-superior-card">
+                    <div id="boxplot-chart-container" style="width:100%;height:340px;background:#181b23;border-radius:12px;"></div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO INTERACTIVO DE DISPERSIÓN -->
+            <div class="grafico-dispersion-wrapper">
+                <div class="grafico-dispersion-titulo">Análisis de Dispersión</div>
+                <div class="grafico-dispersion-controls">
+                    <label for="stat-comparacion-selector">Comparar con:</label>
+                    <select id="stat-comparacion-selector" class="grafico-dispersion-select">
+                        <option value="Rating">Rating</option>
+                        <option value="Goles por partido">Goles por partido</option>
+                        <option value="Goles concedidos por partido">Goles concedidos por partido</option>
+                        <option value="Posesión promedio">Posesión promedio</option>
+                        <option value="Vallas invictas">Vallas invictas</option>
+                        <option value="Goles esperados (xG)">Goles esperados (xG)</option>
+                        <option value="Tiros al arco por partido">Tiros al arco por partido</option>
+                        <option value="Ocasiones claras">Ocasiones claras</option>
+                        <option value="Ocasiones claras falladas">Ocasiones claras falladas</option>
+                        <option value="Pases precisos por partido">Pases precisos por partido</option>
+                        <option value="Pases largos precisos por partido">Pases largos precisos por partido</option>
+                        <option value="Centros precisos por partido">Centros precisos por partido</option>
+                        <option value="Penales a favor">Penales a favor</option>
+                        <option value="Toques en el área rival">Toques en el área rival</option>
+                        <option value="Tiros de esquina">Tiros de esquina</option>
+                        <option value="xG concedido">xG concedido</option>
+                        <option value="Intercepciones por partido">Intercepciones por partido</option>
+                        <option value="Entradas exitosas por partido">Entradas exitosas por partido</option>
+                        <option value="Despejes por partido">Despejes por partido</option>
+                        <option value="Recuperaciones en el último tercio">Recuperaciones en el último tercio</option>
+                        <option value="Atajadas por partido">Atajadas por partido</option>
+                        <option value="Faltas por partido">Faltas por partido</option>
+                        <option value="Tarjetas amarillas">Tarjetas amarillas</option>
+                        <option value="Tarjetas rojas">Tarjetas rojas</option>
+                    </select>
+                </div>
+                <div class="grafico-dispersion-content">
+                    <div id="chart-dispersion"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div id="error-estadistica" class="error-message" style="display: none;">
+            <i class="bx bx-error"></i>
+            <span id="error-message-text">Error cargando datos</span>
+            <button onclick="cargarEstadisticaDetalle()" class="retry-btn">Reintentar</button>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/static/myapp/js/config.js"></script>
+    <script src="/static/myapp/js/header.js"></script>
+    
+    <script>
+        // Variables globales
+        window.estadisticaData = {
+            equipoId: null,
+            statName: null,
+            equipoNombre: null,
+            equipoLogo: null,
+            datosGrafico: null
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📊 Página de estadística detalle cargada');
+            
+            // Obtener parámetros de URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const equipoId = urlParams.get('equipo');
+            const statName = urlParams.get('stat');
+            
+            if (equipoId && statName) {
+                window.estadisticaData.equipoId = equipoId;
+                window.estadisticaData.statName = statName;
+                
+                cargarEstadisticaDetalle();
+            } else {
+                mostrarError('Parámetros de URL faltantes. Se requiere equipo y estadística.');
+            }
+        });
+
+        async function cargarEstadisticaDetalle() {
+            const loadingEl = document.getElementById('loading-estadistica');
+            const contentEl = document.getElementById('estadistica-content');
+            const errorEl = document.getElementById('error-estadistica');
+            
+            // Mostrar loading
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+            errorEl.style.display = 'none';
+            
+            try {
+                const { equipoId, statName } = window.estadisticaData;
+                
+                // ✅ CORREGIR URL DE LA API (sin API_CONFIG.BASE_URL)
+                const response = await fetch(`/ajax/equipo/${equipoId}/estadistica/${encodeURIComponent(statName)}/`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Actualizar datos globales
+                window.estadisticaData.equipoNombre = data.equipo.nombre;
+                window.estadisticaData.equipoLogo = data.equipo.logo;
+                window.estadisticaData.datosGrafico = data.datos_grafico;
+                
+                // Ocultar loading y mostrar contenido
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+                
+                // Renderizar datos
+                renderEquipoInfo(data);
+                renderEstadisticas(data);
+                
+                // Actualizar título de la página
+                document.title = `${statName} - ${data.equipo.nombre} | ScoutGine`;
+                
+                // Cargar script de estadísticas si existe
+                if (typeof initEstadisticaFutbol === 'function') {
+                    initEstadisticaFutbol();
+                }
+                
+            } catch (error) {
+                console.error('Error cargando estadística:', error);
+                mostrarError(error.message);
+            }
+        }
+
+        function renderEquipoInfo(data) {
+            const equipo = data.equipo;
+            const statName = data.stat_name;
+            
+            // Actualizar título
+            document.getElementById('estadistica-title').textContent = statName;
+            
+            // Actualizar info del equipo
+            const equipoInfoEl = document.getElementById('equipo-info');
+            let equipoHTML = '';
+            
+            if (equipo.logo) {
+                equipoHTML += `<img src="${equipo.logo}" alt="${equipo.nombre}" class="equipo-logo-small" />`;
+            } else {
+                equipoHTML += `
+                    <div class="equipo-logo-placeholder-small">
+                        ${equipo.nombre.charAt(0).toUpperCase()}
+                    </div>
+                `;
+            }
+            
+            equipoHTML += `<span>${equipo.nombre}</span>`;
+            equipoInfoEl.innerHTML = equipoHTML;
+            
+            // Actualizar botón de volver
+            const backButton = document.getElementById('back-button');
+            backButton.href = `equipo.html?id=${equipo.id}`;
+        }
+
+        function renderEstadisticas(data) {
+            // Actualizar cards de estadísticas
+            document.getElementById('stat-value-actual').textContent = data.stat_value || 'N/A';
+            document.getElementById('stat-value-promedio').textContent = data.promedio || 'N/A';
+            document.getElementById('stat-value-posicion').textContent = data.posicion || 'N/A';
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('loading-estadistica').style.display = 'none';
+            document.getElementById('estadistica-content').style.display = 'none';
+            
+            const errorEl = document.getElementById('error-estadistica');
+            document.getElementById('error-message-text').textContent = mensaje;
+            errorEl.style.display = 'block';
+        }
+
+        // Función para uso del script de estadísticas
+        function initEstadisticaFutbol() {
+            console.log('📊 Inicializando gráficos de estadística');
+            
+            // Configurar equipoId para el script de estadísticas
+            window.equipoId = parseInt(window.estadisticaData.equipoId);
+            
+            // Aquí se pueden inicializar los gráficos con los datos cargados
+            if (window.estadisticaData.datosGrafico) {
+                console.log('📈 Datos de gráfico disponibles:', window.estadisticaData.datosGrafico);
+            }
+        }
+
+        // Event listeners para los selectores
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'radar-group-selector') {
+                // Actualizar gráfico radar
+                if (typeof updateRadarChart === 'function') {
+                    updateRadarChart(e.target.value);
+                }
+            } else if (e.target.id === 'stat-comparacion-selector') {
+                // Actualizar gráfico de dispersión
+                if (typeof updateScatterChart === 'function') {
+                    updateScatterChart(e.target.value);
+                }
+            }
+        });
+    </script>
+    
+    <!-- Script específico de estadísticas -->
+    <script src="/static/myapp/js/estadistica_futbol.js"></script>
+</body>
+</html>

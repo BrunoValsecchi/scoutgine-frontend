@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScoutGine | Equipos</title>
+    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    
+    <link rel="stylesheet" href="/static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="static/myapp/css/topnav.css" />
+    <link rel="stylesheet" href="static/myapp/css/equipo.css" />
+</head>
+
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <main class="main-content">
+        <!-- ✅ LISTA DE EQUIPOS -->
+        <div id="equipos-container">
+            <div class="loading-container" id="equipos-loading">
+                <div class="loading-spinner">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                </div>
+                <p>Cargando equipos...</p>
+            </div>
+            <div id="equipos-content"></div>
+        </div>
+        
+        <!-- ✅ DETALLE DE EQUIPO (oculto por defecto) -->
+        <div id="equipo-detalle-container" style="display: none;">
+            <div class="loading-container" id="equipo-detalle-loading">
+                <div class="loading-spinner">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                </div>
+                <p>Cargando detalle del equipo...</p>
+            </div>
+            <div id="equipo-detalle-content"></div>
+        </div>
+        
+        <!-- ✅ PLANTILLA DEL EQUIPO (oculto por defecto) -->
+        <div id="plantilla-container" style="display: none;">
+            <div class="loading-container" id="plantilla-loading">
+                <div class="loading-spinner">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                </div>
+                <p>Cargando plantilla...</p>
+            </div>
+            <div id="plantilla-content"></div>
+        </div>
+        
+        <!-- ✅ ESTADÍSTICAS DEL EQUIPO (oculto por defecto) -->
+        <div id="estadisticas-container" style="display: none;">
+            <div class="loading-container" id="estadisticas-loading">
+                <div class="loading-spinner">
+                    <i class='bx bx-loader-alt bx-spin'></i>
+                </div>
+                <p>Cargando estadísticas...</p>
+            </div>
+            <div id="estadisticas-content"></div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="/static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    
+    <script>
+        // Variables globales
+        window.equipoData = {
+            equipoId: null,
+            equipoNombre: null,
+            currentView: 'equipos' // 'equipos', 'detalle', 'plantilla', 'estadisticas'
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('⚽ Página de equipos cargada');
+            
+            // Verificar si hay ID de equipo específico en URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const equipoId = urlParams.get('id');
+            
+            if (equipoId) {
+                // Cargar detalle de equipo específico
+                window.equipoData.equipoId = equipoId;
+                cargarEquipoDetalle(equipoId);
+            } else {
+                // Cargar lista de equipos
+                cargarEquipos();
+            }
+            
+            // Escuchar eventos de navegación
+            document.addEventListener('navButtonClick', function(e) {
+                const { page, button } = e.detail;
+                
+                if (page === 'equipo') {
+                    handleEquipoNavigation(button);
+                }
+            });
+        });
+
+        function handleEquipoNavigation(buttonId) {
+            if (!window.equipoData.equipoId) {
+                console.log('No hay equipo seleccionado');
+                return;
+            }
+            
+            // Ocultar todas las secciones
+            hideAllSections();
+            
+            switch(buttonId) {
+                case 'btn-tablas': // Detalle del equipo
+                    showSection('equipo-detalle-container');
+                    window.equipoData.currentView = 'detalle';
+                    cargarEquipoDetalle(window.equipoData.equipoId);
+                    break;
+                case 'btn-stats-equipo': // Plantilla
+                    showSection('plantilla-container');
+                    window.equipoData.currentView = 'plantilla';
+                    cargarPlantilla(window.equipoData.equipoId);
+                    break;
+                case 'btn-stats-jugadores': // Estadísticas
+                    showSection('estadisticas-container');
+                    window.equipoData.currentView = 'estadisticas';
+                    cargarEstadisticas(window.equipoData.equipoId);
+                    break;
+            }
+        }
+
+        function hideAllSections() {
+            document.getElementById('equipos-container').style.display = 'none';
+            document.getElementById('equipo-detalle-container').style.display = 'none';
+            document.getElementById('plantilla-container').style.display = 'none';
+            document.getElementById('estadisticas-container').style.display = 'none';
+        }
+
+        function showSection(sectionId) {
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        async function cargarEquipos() {
+            const loadingEl = document.getElementById('equipos-loading');
+            const contentEl = document.getElementById('equipos-content');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            // Mostrar sección de equipos
+            showSection('equipos-container');
+            window.equipoData.currentView = 'equipos';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipos/`);
+                const data = await response.json();
+                
+                loadingEl.style.display = 'none';
+                renderEquipos(data.equipos);
+                
+            } catch (error) {
+                console.error('Error cargando equipos:', error);
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error cargando equipos</h3>
+                        <p>${error.message}</p>
+                        <button onclick="cargarEquipos()" class="retry-btn">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderEquipos(equipos) {
+            const contentEl = document.getElementById('equipos-content');
+            
+            if (!equipos || equipos.length === 0) {
+                contentEl.innerHTML = `
+                    <div class="no-data-message">
+                        <h3>⚽ No hay equipos disponibles</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            let equiposHTML = '<div class="equipos-container">';
+            
+            equipos.forEach(equipo => {
+                equiposHTML += `
+                    <a href="equipo.html?id=${equipo.id}" class="equipo-card" onclick="navegarAEquipo(${equipo.id}, '${equipo.nombre}'); return false;">
+                        ${equipo.logo ? `
+                            <img src="${equipo.logo}" 
+                                 alt="Logo ${equipo.nombre}" 
+                                 class="equipo-logo"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="equipo-logo-placeholder" style="display:none;">
+                                ${equipo.nombre.charAt(0).toUpperCase()}
+                            </div>
+                        ` : `
+                            <div class="equipo-logo-placeholder">
+                                ${equipo.nombre.charAt(0).toUpperCase()}
+                            </div>
+                        `}
+                        
+                        <div class="equipo-nombre">${equipo.nombre_corto || equipo.nombre}</div>
+                        <div class="equipo-liga">${equipo.liga || 'Primera División'}</div>
+                    </a>
+                `;
+            });
+            
+            equiposHTML += '</div>';
+            contentEl.innerHTML = equiposHTML;
+        }
+
+        function navegarAEquipo(equipoId, equipoNombre) {
+            // Actualizar datos globales
+            window.equipoData.equipoId = equipoId;
+            window.equipoData.equipoNombre = equipoNombre;
+            
+            // Actualizar URL sin recargar página
+            const newUrl = `${window.location.pathname}?id=${equipoId}`;
+            window.history.pushState({equipoId}, '', newUrl);
+            
+            // Cargar detalle del equipo
+            cargarEquipoDetalle(equipoId);
+        }
+
+        async function cargarEquipoDetalle(equipoId) {
+            const loadingEl = document.getElementById('equipo-detalle-loading');
+            const contentEl = document.getElementById('equipo-detalle-content');
+            
+            hideAllSections();
+            showSection('equipo-detalle-container');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/info/`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                loadingEl.style.display = 'none';
+                renderEquipoDetalle(data);
+                
+                // Actualizar datos globales
+                window.equipoData.equipoNombre = data.equipo.nombre;
+                
+                // Actualizar título
+                document.title = `${data.equipo.nombre} | ScoutGine`;
+                
+            } catch (error) {
+                console.error('Error cargando equipo:', error);
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error cargando equipo</h3>
+                        <p>${error.message}</p>
+                        <button onclick="cargarEquipoDetalle(${equipoId})" class="retry-btn">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderEquipoDetalle(data) {
+            const equipo = data.equipo;
+            const contentEl = document.getElementById('equipo-detalle-content');
+            
+            let detalleHTML = `
+                <div class="equipo-detalle">
+                    <!-- Back Button -->
+                    <div class="back-section">
+                        <button onclick="cargarEquipos()" class="back-btn">
+                            <i class="bx bx-arrow-back"></i>
+                            Volver a equipos
+                        </button>
+                    </div>
+                    
+                    <!-- Hero Section -->
+                    <div class="equipo-hero">
+                        <div class="equipo-logo-grande">
+                            ${equipo.logo ? `
+                                <img src="${equipo.logo}" alt="${equipo.nombre}" class="logo-img">
+                            ` : `
+                                <div class="logo-placeholder">
+                                    ${equipo.nombre.charAt(0).toUpperCase()}
+                                </div>
+                            `}
+                        </div>
+                        <div class="equipo-info">
+                            <h1>${equipo.nombre}</h1>
+                            <p class="equipo-liga">${equipo.liga || 'Primera División'}</p>
+                            <div class="equipo-stats-hero">
+                                <div class="stat-hero">
+                                    <span class="stat-value">${equipo.posicion || 'N/A'}</span>
+                                    <span class="stat-label">Posición</span>
+                                </div>
+                                <div class="stat-hero">
+                                    <span class="stat-value">${equipo.puntos || 'N/A'}</span>
+                                    <span class="stat-label">Puntos</span>
+                                </div>
+                                <div class="stat-hero">
+                                    <span class="stat-value">${equipo.rating || 'N/A'}</span>
+                                    <span class="stat-label">Rating</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Grid -->
+                    <div class="equipo-stats-grid">
+                        <h3>📊 Estadísticas del Equipo</h3>
+                        <div class="stats-grid">
+            `;
+            
+            // Agregar estadísticas con enlaces a detalle
+            const stats = [
+                { label: 'Goles por partido', value: equipo.goles_promedio },
+                { label: 'Goles concedidos por partido', value: equipo.goles_concedidos_promedio },
+                { label: 'Posesión promedio', value: equipo.posesion_promedio, suffix: '%' },
+                { label: 'Rating', value: equipo.rating },
+                { label: 'Vallas invictas', value: equipo.vallas_invictas },
+                { label: 'Tiros al arco por partido', value: equipo.tiros_arco_promedio },
+                { label: 'Pases precisos por partido', value: equipo.pases_precisos_promedio },
+                { label: 'Faltas por partido', value: equipo.faltas_promedio }
+            ];
+            
+            stats.forEach(stat => {
+                const value = stat.value !== null && stat.value !== undefined 
+                    ? parseFloat(stat.value).toFixed(1).replace(/\.0$/, '') + (stat.suffix || '')
+                    : 'N/A';
+                
+                detalleHTML += `
+                    <div class="stat-item">
+                        <a href="estadistica_detalle.html?equipo=${equipo.id}&stat=${encodeURIComponent(stat.label)}">
+                            <span class="stat-label">${stat.label}</span>
+                            <span class="stat-value">${value}</span>
+                        </a>
+                    </div>
+                `;
+            });
+            
+            detalleHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentEl.innerHTML = detalleHTML;
+        }
+
+        async function cargarPlantilla(equipoId) {
+            const loadingEl = document.getElementById('plantilla-loading');
+            const contentEl = document.getElementById('plantilla-content');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/plantilla/`);
+                const data = await response.json();
+                
+                loadingEl.style.display = 'none';
+                renderPlantilla(data);
+                
+            } catch (error) {
+                console.error('Error cargando plantilla:', error);
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error cargando plantilla</h3>
+                        <button onclick="cargarPlantilla(${equipoId})" class="retry-btn">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderPlantilla(data) {
+            const jugadores = data.jugadores;
+            const contentEl = document.getElementById('plantilla-content');
+            
+            if (!jugadores || jugadores.length === 0) {
+                contentEl.innerHTML = `
+                    <div class="no-data-message">
+                        <h3>👥 No hay jugadores disponibles</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            let plantillaHTML = `
+                <div class="plantilla-container">
+                    <h2>👥 Plantilla del Equipo</h2>
+                    <div class="jugadores-grid">
+            `;
+            
+            jugadores.forEach(jugador => {
+                plantillaHTML += `
+                    <a href="jugador_detalle.html?id=${jugador.id}" class="jugador-card">
+                        <div class="jugador-info">
+                            <div class="jugador-dorsal">${jugador.dorsal || '--'}</div>
+                            <div class="jugador-detalles">
+                                <h4>${jugador.nombre}</h4>
+                                <p>${jugador.posicion || 'Posición'}</p>
+                                <span class="jugador-edad">${jugador.edad ? jugador.edad + ' años' : ''}</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            plantillaHTML += `
+                    </div>
+                </div>
+            `;
+            
+            contentEl.innerHTML = plantillaHTML;
+        }
+
+        async function cargarEstadisticas(equipoId) {
+            const loadingEl = document.getElementById('estadisticas-loading');
+            const contentEl = document.getElementById('estadisticas-content');
+            
+            loadingEl.style.display = 'block';
+            contentEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/estadisticas/`);
+                const data = await response.json();
+                
+                loadingEl.style.display = 'none';
+                renderEstadisticasDetalladas(data);
+                
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                loadingEl.style.display = 'none';
+                contentEl.innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Error cargando estadísticas</h3>
+                        <button onclick="cargarEstadisticas(${equipoId})" class="retry-btn">Reintentar</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderEstadisticasDetalladas(data) {
+            const estadisticas = data.estadisticas;
+            const contentEl = document.getElementById('estadisticas-content');
+            
+            let estadisticasHTML = `
+                <div class="estadisticas-detalladas">
+                    <h2>📈 Estadísticas Detalladas</h2>
+                    <div class="stats-categories">
+            `;
+            
+            // Agrupar estadísticas por categorías
+            const categorias = {
+                'Ofensivas': ['Goles', 'xG', 'Tiros', 'Tiros al arco'],
+                'Defensivas': ['Goles concedidos', 'xGC', 'Vallas invictas', 'Intercepciones'],
+                'Posesión': ['Posesión', 'Pases', 'Precisión de pases', 'Centros'],
+                'Disciplina': ['Faltas', 'Tarjetas amarillas', 'Tarjetas rojas']
+            };
+            
+            Object.entries(categorias).forEach(([categoria, stats]) => {
+                estadisticasHTML += `
+                    <div class="stats-category">
+                        <h3>${categoria}</h3>
+                        <div class="stats-list">
+                `;
+                
+                stats.forEach(stat => {
+                    const valor = estadisticas[stat] || 'N/A';
+                    estadisticasHTML += `
+                        <div class="stat-row">
+                            <span class="stat-name">${stat}</span>
+                            <span class="stat-value">${valor}</span>
+                        </div>
+                    `;
+                });
+                
+                estadisticasHTML += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            estadisticasHTML += `
+                    </div>
+                </div>
+            `;
+            
+            contentEl.innerHTML = estadisticasHTML;
+        }
+
+        // Manejar navegación con botón atrás del navegador
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.equipoId) {
+                cargarEquipoDetalle(event.state.equipoId);
+            } else {
+                cargarEquipos();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoutGine | Dashboard</title>
+    
+    <!-- External CSS Libraries -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/styles/ag-grid.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/styles/ag-theme-alpine.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="static/myapp/css/menu.css" />
+    <link rel="stylesheet" href="static/myapp/css/topnav.css" />
+    
+    <!-- External JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.0.0/dist/ag-grid-community.min.noStyle.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+</head>
+
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="dashboard-container">
+            <!-- Presentación/Bienvenida -->
+            <div id="presentacion-container" class="presentacion-section">
+                <!-- Se cargará con JavaScript -->
+            </div>
+            
+            <!-- Gráficos y Estadísticas -->
+            <div id="graficos-container" class="graficos-section">
+                <!-- Se cargarán con JavaScript -->
+            </div>
+            
+            <!-- Tabla de Datos -->
+            <div id="tabla-container" class="tabla-section">
+                <!-- Se cargará con JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Local JS Scripts -->
+    <script src="static/myapp/js/presentacion.js"></script>
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/grafico.js"></script>
+    <script src="static/myapp/js/headerlan.js"></script>
+    
+    <!-- Inicializar Dashboard -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Dashboard inicializando...');
+            
+            // Cargar presentación si existe la función
+            if (typeof initPresentacion === 'function') {
+                initPresentacion();
+            }
+            
+            // Cargar gráficos si existe la función
+            if (typeof initGraficos === 'function') {
+                initGraficos();
+            }
+            
+            // Inicializar tabla si existe la función
+            if (typeof initTabla === 'function') {
+                initTabla();
+            }
+        });
+    </script>
+</body>
+</html>

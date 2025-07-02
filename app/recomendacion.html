@@ -1,21 +1,24 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} | ScoutGine</title>
+    <title>Recomendación de Jugadores | ScoutGine</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="{% static 'myapp/css/menu.css' %}">
-    <link rel="stylesheet" href="{% static 'myapp/css/topnav.css' %}">
-    <link rel="stylesheet" href="{% static 'myapp/css/recomendacion.css' %}">
+    <!-- ✅ USAR RUTAS ESTÁTICAS SIN DJANGO -->
+    <link rel="stylesheet" href="static/myapp/css/menu.css">
+    <link rel="stylesheet" href="static/myapp/css/topnav.css">
+    <link rel="stylesheet" href="static/myapp/css/recomendacion.css">
 </head>
 <body>
-    {% include 'partials/header.html' %}
-    {% include 'partials/topnav.html' %}
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
 
     <main class="main-content">
         <div class="recomendacion-container">
@@ -31,16 +34,8 @@
                         <i class='bx bx-target-lock'></i> Perfil del Jugador:
                     </label>
                     <select id="perfil-select" class="filtro-select">
-                        <option value="">Selecciona un perfil...</option>
-                        {% for categoria, perfiles_lista in perfiles.items %}
-                            <optgroup label="{{ categoria }}">
-                                {% for perfil in perfiles_lista %}
-                                    <option value="{{ perfil.key }}" data-descripcion="{{ perfil.descripcion }}">
-                                        {{ perfil.nombre }}
-                                    </option>
-                                {% endfor %}
-                            </optgroup>
-                        {% endfor %}
+                        <option value="">Cargando perfiles...</option>
+                        <!-- Se llenarán vía JavaScript -->
                     </select>
                 </div>
 
@@ -49,10 +44,8 @@
                         <i class='bx bx-shield-x'></i> Excluir Equipo:
                     </label>
                     <select id="equipo-excluir" class="filtro-select">
-                        <option value="">Todos los equipos</option>
-                        {% for equipo in equipos %}
-                            <option value="{{ equipo.id }}">{{ equipo.nombre }}</option>
-                        {% endfor %}
+                        <option value="">Cargando equipos...</option>
+                        <!-- Se llenarán vía JavaScript -->
                     </select>
                 </div>
 
@@ -68,7 +61,7 @@
                     </select>
                 </div>
 
-                <button id="buscar-btn" class="buscar-btn">
+                <button id="buscar-btn" class="buscar-btn" disabled>
                     <i class='bx bx-search'></i> Buscar Jugadores
                 </button>
             </div>
@@ -112,6 +105,9 @@
         </div>
     </main>
 
-    <script src="{% static 'myapp/js/recomendacion.js' %}"></script>
+    <!-- ✅ SCRIPTS SIN DJANGO TEMPLATES -->
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/recomendacion.js"></script>
 </body>
 </html>

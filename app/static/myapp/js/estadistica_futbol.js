@@ -70,7 +70,7 @@ if (typeof window.EstadisticaFutbolLoaded === 'undefined') {
                     stat_comparacion: statComparacion
                 };
 
-                const response = await fetch('https://scoutgine-backend.onrender.com/ajax/grafico-dispersion/', {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/grafico-dispersion/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -363,7 +363,7 @@ if (typeof window.EstadisticaFutbolLoaded === 'undefined') {
         boxplotContainer.style.margin = '0 auto 32px auto';
 
         console.log(`[Boxplot] Fetch: /ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`);
-        fetch(`https://scoutgine-backend.onrender.com/ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`)
+        fetch(`${API_CONFIG.BASE_URL}/ajax/boxplot-estadistica/?stat_id=${encodeURIComponent(statId)}&equipo_id=${equipoId}`)
             .then(resp => {
                 console.log('[Boxplot] Respuesta fetch:', resp);
                 return resp.json();

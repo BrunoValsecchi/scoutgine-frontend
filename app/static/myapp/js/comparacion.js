@@ -1,1078 +1,1297 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // ✅ VERIFICAR QUE NO SE EJECUTE MÚLTIPLES VECES
-    if (window.comparacionInitialized) {
-        return;
+console.log('=== COMPARACION.JS CARGADO ===');
+
+// ✅ VARIABLES GLOBALES
+window.comparacionData = {
+    equipos: [],
+    jugadores: [],
+    gruposStatsEquipos: {},
+    gruposStatsJugadores: {},
+    currentMode: 'equipos'
+};
+
+let equiposActuales = {};
+let jugadoresActuales = {};
+let grupoActual = 'ofensivo';
+let grupoActualJugadores = 'ofensivo';
+
+function getCsrfToken() {
+    // ✅ MÉTODO 1: Desde el meta tag (más confiable)
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag) {
+        return metaTag.getAttribute('content');
     }
-    window.comparacionInitialized = true;
     
-    // Verificar ECharts
-    if (typeof echarts === 'undefined') {
-        console.error('❌ ECharts no disponible');
-        return;
+    // ✅ MÉTODO 2: Desde las cookies
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
     }
     
-    // Verificar elementos de datos
-    const equiposDataElement = document.getElementById('equipos-data');
-    const gruposEquiposElement = document.getElementById('grupos-stats-equipos-data');
-    
-    if (!equiposDataElement || !gruposEquiposElement) {
-        console.error('❌ Elementos de datos no encontrados');
-        return;
+    // ✅ MÉTODO 3: Desde un input hidden
+    const inputTag = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (inputTag) {
+        return inputTag.value;
     }
     
-    // ✅ PARSEAR DATOS
-    let equiposData, gruposEquipos;
+    console.log('⚠️ Token CSRF no encontrado');
+    return '';
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Inicializando comparación...');
     
     try {
-        equiposData = JSON.parse(equiposDataElement.textContent.trim());
-        gruposEquipos = JSON.parse(gruposEquiposElement.textContent.trim());
+        // ✅ CARGAR DATOS INICIALES
+        await cargarDatosComparacion();
+        
+        // ✅ CONFIGURAR NAVEGACIÓN
+        setupNavegacion();
+        
+        // ✅ CONFIGURAR EVENT LISTENERS
+        setupEventListeners();
+        
+        // ✅ MOSTRAR EQUIPOS POR DEFECTO
+        showEquiposComparacion();
+        
+        console.log('✅ Comparación inicializada correctamente');
+        
     } catch (error) {
-        console.error('❌ Error parseando datos:', error);
-        return;
+        console.error('❌ Error inicializando comparación:', error);
+        mostrarError('Error cargando la página de comparación');
     }
-    
-    // ✅ INICIALIZAR ECHARTS CON DIMENSIONES MÁS COMPACTAS
-    const chartContainer = document.getElementById('radar-comparacion-equipos');
-    if (!chartContainer) {
-        console.error('❌ Contenedor del gráfico no encontrado');
-        return;
-    }
+});
 
-    chartContainer.style.width = '100%';
-    chartContainer.style.maxWidth = '550px';
-    chartContainer.style.height = '480px';
-    chartContainer.style.margin = '0 auto';
+// ✅ FUNCIÓN PARA CARGAR DATOS
+async function cargarDatosComparacion() {
+    const loadingEl = document.getElementById('loading-comparacion');
+    const errorEl = document.getElementById('error-comparacion');
+    
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (errorEl) errorEl.style.display = 'none';
+    
+    try {
+        console.log('📡 Cargando datos desde APIs...');
+        
+        // ✅ CARGAR EQUIPOS
+        const equiposResponse = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipos/`);
+        if (!equiposResponse.ok) throw new Error('Error cargando equipos');
+        const equiposData = await equiposResponse.json();
+        
+        // ✅ CARGAR GRUPOS DE ESTADÍSTICAS
+        const gruposEquiposResponse = await fetch(`${API_CONFIG.BASE_URL}/ajax/grupos-stats-equipos/`);
+        if (!gruposEquiposResponse.ok) throw new Error('Error cargando grupos de equipos');
+        const gruposEquiposData = await gruposEquiposResponse.json();
+        
+        const gruposJugadoresResponse = await fetch(`${API_CONFIG.BASE_URL}/ajax/grupos-stats-jugadores/`);
+        if (!gruposJugadoresResponse.ok) throw new Error('Error cargando grupos de jugadores');
+        const gruposJugadoresData = await gruposJugadoresResponse.json();
+        
+        // ✅ ACTUALIZAR DATOS GLOBALES
+        window.comparacionData.equipos = equiposData.equipos || [];
+        window.comparacionData.gruposStatsEquipos = gruposEquiposData || {};
+        window.comparacionData.gruposStatsJugadores = gruposJugadoresData || {};
+        
+        console.log('✅ Datos cargados:', {
+            equipos: window.comparacionData.equipos.length,
+            gruposEquipos: Object.keys(window.comparacionData.gruposStatsEquipos).length,
+            gruposJugadores: Object.keys(window.comparacionData.gruposStatsJugadores).length
+        });
+        
+        // ✅ LLENAR SELECTORES
+        llenarSelectores();
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+    } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+        if (loadingEl) loadingEl.style.display = 'none';
+        mostrarError(error.message);
+        throw error;
+    }
+}
 
-    const myChart = echarts.init(chartContainer, null, {devicePixelRatio: 2});
+// ✅ FUNCIÓN PARA LLENAR SELECTORES
+function llenarSelectores() {
+    const equipos = window.comparacionData.equipos;
+    const gruposEquipos = window.comparacionData.gruposStatsEquipos;
+    const gruposJugadores = window.comparacionData.gruposStatsJugadores;
     
-    // ✅ VARIABLES GLOBALES PARA EL TOOLTIP Y MODO
-    let equiposActuales = {};
-    let grupoActual = 'Ofensivos';
-    let modoActual = 'graficos'; // 'graficos' o 'estadisticas'
+    // ✅ SELECTORES DE EQUIPOS
+    const selectoresEquipos = [
+        'equipo1-select', 'equipo2-select', 
+        'equipo-jugador1-select', 'equipo-jugador2-select'
+    ];
     
-    // ✅ ELEMENTOS DOM
-    const btnGraficos = document.getElementById('btn-graficos-equipos');
-    const btnEstadisticas = document.getElementById('btn-estadisticas-equipos');
-    const containerGrafico = document.getElementById('radar-comparacion-equipos');
-    const containerEstadisticas = document.getElementById('estadisticas-comparacion-equipos');
-    const grupoSelector = document.getElementById('grupo-select-equipos'); // ✅ AÑADIR REFERENCIA
-    
-    // ✅ FUNCIÓN PARA CAMBIAR MODO
-    function cambiarModo(modo) {
-        modoActual = modo;
-        
-        if (modo === 'graficos') {
-            btnGraficos.classList.add('modo-activo');
-            btnEstadisticas.classList.remove('modo-activo');
-            containerGrafico.style.display = 'block';
-            containerEstadisticas.style.display = 'none';
-            
-            // ✅ MOSTRAR SELECTOR DE GRUPOS EN MODO GRÁFICO
-            if (grupoSelector && grupoSelector.parentElement) {
-                grupoSelector.parentElement.style.display = 'block';
-            }
-            
-        } else {
-            btnEstadisticas.classList.add('modo-activo');
-            btnGraficos.classList.remove('modo-activo');
-            containerGrafico.style.display = 'none';
-            containerEstadisticas.style.display = 'block';
-            
-            // ✅ OCULTAR SELECTOR DE GRUPOS EN MODO ESTADÍSTICAS
-            if (grupoSelector && grupoSelector.parentElement) {
-                grupoSelector.parentElement.style.display = 'none';
-            }
-        }
-        
-        // ✅ ACTUALIZAR VISTA SEGÚN EQUIPOS SELECCIONADOS
-        actualizarVista();
-    }
-    
-    // ✅ FUNCIÓN PARA ACTUALIZAR VISTA
-    function actualizarVista() {
-        const selectEquipo1 = document.getElementById('equipo1-select');
-        const selectEquipo2 = document.getElementById('equipo2-select');
-        
-        if (!selectEquipo1 || !selectEquipo2) {
-            return;
-        }
-        
-        const equipoId1 = parseInt(selectEquipo1.value);
-        const equipoId2 = parseInt(selectEquipo2.value);
-        
-        if (!equipoId1 || !equipoId2 || equipoId1 === equipoId2) {
-            if (modoActual === 'graficos') {
-                myChart.clear();
-            } else {
-                containerEstadisticas.innerHTML = '<div class="no-data">Selecciona dos equipos diferentes para comparar</div>';
-            }
-            return;
-        }
-        
-        const equipo1 = equiposData.find(e => e.id === equipoId1);
-        const equipo2 = equiposData.find(e => e.id === equipoId2);
-        
-        if (!equipo1 || !equipo2) {
-            return;
-        }
-        
-        if (modoActual === 'graficos') {
-            generarGraficoRadar(equipo1, equipo2, gruposEquipos);
-        } else {
-            generarTablaEstadisticas(equipo1, equipo2, gruposEquipos);
-        }
-    }
-    
-    // ✅ FUNCIÓN PARA GENERAR TABLA DE ESTADÍSTICAS - TODAS JUNTAS
-    function generarTablaEstadisticas(equipo1, equipo2, grupos) {
-        let html = `
-            <div class="estadisticas-header">
-                <h3>Comparación Completa: ${equipo1.nombre} vs ${equipo2.nombre}</h3>
-            </div>
-            <div class="tabla-comparacion">
-        `;
-        
-        // ✅ ITERAR POR CADA GRUPO DE ESTADÍSTICAS
-        Object.entries(grupos).forEach(([nombreGrupo, estadisticasGrupo]) => {
-            html += `
-                <div class="grupo-estadisticas">
-                    <h4 class="grupo-titulo">${nombreGrupo}</h4>
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>Estadística</th>
-                                <th class="equipo-col equipo1-col">${equipo1.nombre}</th>
-                                <th class="equipo-col equipo2-col">${equipo2.nombre}</th>
-                                <th>Diferencia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            // ✅ ITERAR POR CADA ESTADÍSTICA DEL GRUPO
-            estadisticasGrupo.forEach(([nombre, campo]) => {
-                const valor1 = equipo1[campo] || 0;
-                const valor2 = equipo2[campo] || 0;
-                const percentil1 = equipo1[`${campo}_percentil`] || 50;
-                const percentil2 = equipo2[`${campo}_percentil`] || 50;
-                
-                const diferencia = (valor1 - valor2).toFixed(2);
-                const diferenciaClass = diferencia > 0 ? 'positiva' : diferencia < 0 ? 'negativa' : 'neutra';
-                const diferenciaSymbol = diferencia > 0 ? '+' : '';
-                
-                // ✅ DETERMINAR CUÁL EQUIPO ES MEJOR EN ESTA ESTADÍSTICA
-                const equipo1Mejor = valor1 > valor2;
-                const equipo2Mejor = valor2 > valor1;
-                
-                html += `
-                    <tr>
-                        <td class="stat-name">${nombre}</td>
-                        <td class="stat-value equipo1-col ${equipo1Mejor ? 'mejor-valor' : ''}">
-                            <div class="valor-principal">${valor1}</div>
-                            <div class="percentil">P${percentil1}</div>
-                        </td>
-                        <td class="stat-value equipo2-col ${equipo2Mejor ? 'mejor-valor' : ''}">
-                            <div class="valor-principal">${valor2}</div>
-                            <div class="percentil">P${percentil2}</div>
-                        </td>
-                        <td class="diferencia ${diferenciaClass}">
-                            ${diferenciaSymbol}${diferencia}
-                        </td>
-                    </tr>
-                `;
+    selectoresEquipos.forEach(selectorId => {
+        const select = document.getElementById(selectorId);
+        if (select) {
+            select.innerHTML = '<option value="">Selecciona equipo</option>';
+            equipos.forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo.id;
+                option.textContent = equipo.nombre;
+                select.appendChild(option);
             });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        });
-        
-        html += `</div>`;
-        
-        containerEstadisticas.innerHTML = html;
-    }
-    
-    // ✅ FUNCIÓN PARA GENERAR GRÁFICO RADAR (sin cambios)
-    function generarGraficoRadar(equipo1, equipo2, grupos) {
-        const grupoSelect = document.getElementById('grupo-select-equipos');
-        const grupoSeleccionado = grupoSelect ? grupoSelect.value : 'Ofensivos';
-        
-        // ✅ ACTUALIZAR VARIABLES GLOBALES
-        grupoActual = grupoSeleccionado;
-        equiposActuales = {
-            [equipo1.nombre]: equipo1,
-            [equipo2.nombre]: equipo2
-        };
-        
-        if (!grupos[grupoSeleccionado]) {
-            return;
-        }
-        
-        const indicators = [];
-        const data1 = [];
-        const data2 = [];
-        
-        // ✅ USAR PERCENTILES PRE-CALCULADOS DEL BACKEND
-        grupos[grupoSeleccionado].forEach(([nombre, campo]) => {
-            const valorOriginal1 = equipo1[campo] || 0;
-            const valorOriginal2 = equipo2[campo] || 0;
-            
-            // ✅ OBTENER PERCENTILES YA CALCULADOS EN PYTHON
-            const percentil1 = equipo1[`${campo}_percentil`] || 50;
-            const percentil2 = equipo2[`${campo}_percentil`] || 50;
-            
-            indicators.push({ 
-                name: nombre, 
-                max: 100,
-                min: 0
-            });
-            
-            data1.push(percentil1);
-            data2.push(percentil2);
-        });
-        
-        // ✅ CONFIGURACIÓN RADAR CON DIMENSIONES MÁS COMPACTAS
-        const option = {
-            backgroundColor: 'transparent',
-            tooltip: { 
-                trigger: 'item',
-                backgroundColor: '#23243a',
-                borderColor: '#00d4ff',
-                borderWidth: 2,
-                textStyle: { color: '#fff', fontSize: 13 },
-                formatter: function(params) {
-                    const equipoNombre = params.name;
-                    const indicatorIndex = params.dataIndex;
-                    
-                    const equipoData = equiposActuales[equipoNombre];
-                    if (!equipoData) {
-                        return `<div style="color:red;">Error: Equipo ${equipoNombre} no encontrado</div>`;
-                    }
-                    
-                    return generarTooltipContent(equipoData, equipoNombre, indicatorIndex, grupos, grupoActual);
-                }
-            },
-            legend: {
-                data: [equipo1.nombre, equipo2.nombre],
-                top: 5,
-                textStyle: { color: '#fff', fontSize: 11 }
-            },
-            radar: {
-                indicator: indicators,
-                center: ['50%', '52%'],
-                radius: '62%',
-                splitLine: { 
-                    lineStyle: { color: '#23243a' } 
-                },
-                splitArea: { 
-                    areaStyle: { color: ['#23243a', '#181b23'] } 
-                },
-                axisName: {
-                    color: '#00d4ff',
-                    fontSize: 12,
-                    formatter: function(value) {
-                        const palabras = value.split(' ');
-                        let linea = '';
-                        let resultado = '';
-                        for (let palabra of palabras) {
-                            if ((linea + ' ' + palabra).trim().length > 12) {
-                                resultado += linea.trim() + '\n';
-                                linea = palabra + ' ';
-                            } else {
-                                linea += palabra + ' ';
-                            }
-                        }
-                        resultado += linea.trim();
-                        return resultado;
-                    }
-                },
-                axisLabel: {
-                    show: true,
-                    fontSize: 9,
-                    color: '#666',
-                    formatter: function(value) {
-                        return `P${value}`;
-                    }
-                }
-            },
-            series: [{
-                name: 'Comparación',
-                type: 'radar',
-                data: [
-                    {
-                        value: data1,
-                        name: equipo1.nombre,
-                        areaStyle: { color: 'rgba(0,212,255,0.3)' },
-                        itemStyle: { color: '#00d4ff' },
-                        lineStyle: { color: '#00d4ff', width: 2 }
-                    },
-                    {
-                        value: data2,
-                        name: equipo2.nombre,
-                        areaStyle: { color: 'rgba(255,215,0,0.15)' },
-                        itemStyle: { color: '#ffd700' },
-                        lineStyle: { color: '#ffd700', width: 2 }
-                    }
-                ],
-                symbolSize: 5
-            }]
-        };
-        
-        myChart.setOption(option);
-    }
-    
-    // ✅ FUNCIÓN AUXILIAR PARA GENERAR CONTENIDO DEL TOOLTIP
-    function generarTooltipContent(equipoData, equipoNombre, indicatorIndex, grupos, grupoActual) {
-        let tooltip = `<div style="font-weight:bold;color:#00d4ff;margin-bottom:8px;font-size:16px;">${equipoNombre}</div>`;
-        
-        grupos[grupoActual].forEach(([nombre, campo], index) => {
-            const valorOriginal = equipoData[campo] || 0;
-            const percentil = equipoData[`${campo}_percentil`] || 50;
-            
-            const esActual = index === indicatorIndex;
-            const estilo = esActual ? 
-                'style="background-color:rgba(0,212,255,0.2);padding:2px 4px;border-radius:3px;margin:1px 0;"' : 
-                'style="margin:1px 0;"';
-            
-            tooltip += `<div ${estilo}>${nombre}: <b style="color:#fff;">${valorOriginal}</b> <span style="color:#ffd700;">(P${percentil})</span></div>`;
-        });
-        
-        return tooltip;
-    }
-    
-    // ✅ EVENT LISTENERS PARA BOTONES DE MODO
-    if (btnGraficos) {
-        btnGraficos.addEventListener('click', () => cambiarModo('graficos'));
-    }
-    
-    if (btnEstadisticas) {
-        btnEstadisticas.addEventListener('click', () => cambiarModo('estadisticas'));
-    }
-    
-    // ✅ EVENT LISTENERS PARA SELECTS
-    const selectEquipo1 = document.getElementById('equipo1-select');
-    const selectEquipo2 = document.getElementById('equipo2-select');
-    const grupoSelect = document.getElementById('grupo-select-equipos');
-    
-    if (selectEquipo1) {
-        selectEquipo1.addEventListener('change', actualizarVista);
-    }
-    
-    if (selectEquipo2) {
-        selectEquipo2.addEventListener('change', actualizarVista);
-    }
-    
-    if (grupoSelect) {
-        grupoSelect.addEventListener('change', actualizarVista);
-    }
-    
-    // ✅ RESPONSIVE
-    window.addEventListener('resize', function() {
-        if (myChart && modoActual === 'graficos') {
-            myChart.resize();
         }
     });
     
-});
+    // ✅ SELECTOR DE GRUPOS EQUIPOS
+    const grupoEquiposSelect = document.getElementById('grupo-select-equipos');
+    if (grupoEquiposSelect) {
+        grupoEquiposSelect.innerHTML = '';
+        Object.entries(gruposEquipos).forEach(([key, grupo]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = grupo.nombre;
+            grupoEquiposSelect.appendChild(option);
+        });
+    }
+    
+    // ✅ SELECTOR DE GRUPOS JUGADORES
+    const grupoJugadoresSelect = document.getElementById('grupo-select-jugadores');
+    if (grupoJugadoresSelect) {
+        grupoJugadoresSelect.innerHTML = '';
+        Object.entries(gruposJugadores).forEach(([key, grupo]) => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = grupo.nombre;
+            grupoJugadoresSelect.appendChild(option);
+        });
+    }
+}
 
-// ✅ FUNCIONES PARA JUGADORES
-let jugadoresData = [];
+// ✅ FUNCIÓN PARA CONFIGURAR NAVEGACIÓN
+function setupNavegacion() {
+    // Escuchar eventos de navegación del header
+    document.addEventListener('navButtonClick', function(e) {
+        const { page, button } = e.detail;
+        if (page === 'comparacion') {
+            handleComparacionNavigation(button);
+        }
+    });
+}
 
-// ✅ CARGAR DATOS DE JUGADORES AL INICIALIZAR
-document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos de jugadores si existen
-    const jugadoresDataElement = document.getElementById('jugadores-data');
-    if (jugadoresDataElement) {
+function handleComparacionNavigation(buttonId) {
+    switch(buttonId) {
+        case 'btn-comparar-equipos':
+            showEquiposComparacion();
+            break;
+        case 'btn-comparar-jugadores':
+            showJugadoresComparacion();
+            break;
+    }
+}
+
+function showEquiposComparacion() {
+    // ✅ LIMPIAR GRÁFICO DE JUGADORES ANTES DE OCULTAR
+    if (window.currentJugadoresChart) {
         try {
-            jugadoresData = JSON.parse(jugadoresDataElement.textContent.trim());
-            console.log('✅ Datos de jugadores cargados:', jugadoresData.length);
-            
-            // ✅ DEBUG COMPLETO: Verificar estructura de datos
-            if (jugadoresData.length > 0) {
-                console.log('🔍 ESTRUCTURA DEL PRIMER JUGADOR:');
-                console.log(jugadoresData[0]);
-                
-                // ✅ VERIFICAR EQUIPOS DISPONIBLES
-                const equiposUnicos = [...new Set(jugadoresData
-                    .filter(j => j.equipo_id !== null)
-                    .map(j => `${j.equipo} (ID: ${j.equipo_id})`))];
-                
-                console.log('🏟️ EQUIPOS DISPONIBLES EN JUGADORES:');
-                equiposUnicos.slice(0, 5).forEach(equipo => console.log(`   - ${equipo}`));
-                
-                // ✅ VERIFICAR POSICIONES DISPONIBLES
-                const posicionesUnicas = [...new Set(jugadoresData
-                    .filter(j => j.posicion && j.posicion !== 'N/A')
-                    .map(j => j.posicion))];
-                
-                console.log('⚽ POSICIONES DISPONIBLES:');
-                posicionesUnicas.forEach(pos => console.log(`   - ${pos}`));
-                
-                // ✅ ESTADÍSTICAS GENERALES
-                const conEquipo = jugadoresData.filter(j => j.equipo_id !== null).length;
-                const sinEquipo = jugadoresData.filter(j => j.equipo_id === null).length;
-                
-                console.log('📊 ESTADÍSTICAS JUGADORES:');
-                console.log(`   Total: ${jugadoresData.length}`);
-                console.log(`   Con equipo: ${conEquipo}`);
-                console.log(`   Sin equipo: ${sinEquipo}`);
-            }
-            
-        } catch (error) {
-            console.error('❌ Error parseando datos de jugadores:', error);
+            window.currentJugadoresChart.dispose();
+            window.currentJugadoresChart = null;
+        } catch (e) {
+            console.warn('⚠️ Error limpiando gráfico de jugadores:', e);
         }
-    } else {
-        console.error('❌ Elemento jugadores-data no encontrado');
     }
-});
 
-// ✅ FUNCIÓN MEJORADA PARA FILTRAR JUGADORES - FILTRO MÁS FLEXIBLE
-function filtrarJugadores(equipoId, posicion = '') {
-    console.log(`🔍 FILTRADO DETALLADO:`);
-    console.log(`   Equipo ID solicitado: ${equipoId} (tipo: ${typeof equipoId})`);
-    console.log(`   Posición solicitada: '${posicion}'`);
-    console.log(`   Total jugadores disponibles: ${jugadoresData.length}`);
-    
-    let jugadoresFiltrados = jugadoresData;
-    
-    // ✅ FILTRAR POR EQUIPO - CONVERSIÓN CORRECTA DE TIPOS
-    if (equipoId) {
-        const equipoIdNum = parseInt(equipoId);
-        console.log(`   Buscando jugadores con equipo_id = ${equipoIdNum} (convertido de "${equipoId}")`);
-        
-        jugadoresFiltrados = jugadoresFiltrados.filter(j => {
-            const jugadorEquipoId = parseInt(j.equipo_id);
-            return jugadorEquipoId === equipoIdNum;
-        });
-        
-        console.log(`   ✅ Después de filtrar por equipo: ${jugadoresFiltrados.length} jugadores`);
-        
-        // ✅ MOSTRAR TODOS LOS JUGADORES DEL EQUIPO (para debug)
-        if (jugadoresFiltrados.length > 0) {
-            console.log(`   🎯 Todos los jugadores del equipo ${equipoIdNum}:`);
-            jugadoresFiltrados.forEach(j => {
-                console.log(`     - ${j.nombre} (${j.posicion}) - Equipo: ${j.equipo}`);
-            });
-        } else {
-            console.warn(`   ⚠️ NO se encontraron jugadores para equipo_id = ${equipoIdNum}`);
-            return jugadoresFiltrados;
-        }
-    }
-    
-    // ✅ FILTRAR POR POSICIÓN - MÁS FLEXIBLE
-    if (posicion && jugadoresFiltrados.length > 0) {
-        console.log(`   🔍 Filtrando por posición: '${posicion}'`);
-        
-        const jugadoresPrevios = jugadoresFiltrados.length;
-        const jugadoresAntesDelFiltro = [...jugadoresFiltrados]; // Copia para debug
-        
-        jugadoresFiltrados = jugadoresFiltrados.filter(j => {
-            if (!j.posicion || j.posicion === 'N/A') return false;
-            
-            const posicionJugador = j.posicion.toUpperCase();
-            const posicionFiltro = posicion.toUpperCase();
-            
-            // ✅ VARIOS TIPOS DE COINCIDENCIA
-            const coincide = posicionJugador === posicionFiltro || 
-                           posicionJugador.includes(posicionFiltro) ||
-                           posicionJugador.split(',').some(p => p.trim() === posicionFiltro) ||
-                           posicionJugador.split(' ').some(p => p.trim() === posicionFiltro);
-            
-            return coincide;
-        });
-        
-        console.log(`   ✅ Después de filtrar por posición: ${jugadoresFiltrados.length}/${jugadoresPrevios} jugadores`);
-        
-        // ✅ DEBUG: Mostrar por qué no hay coincidencias
-        if (jugadoresFiltrados.length === 0 && jugadoresPrevios > 0) {
-            console.log(`   📍 Análisis de posiciones disponibles en equipo ${equipoId}:`);
-            
-            const posicionesDisponibles = jugadoresAntesDelFiltro.map(j => ({
-                nombre: j.nombre,
-                posicion: j.posicion,
-                coincide_exacta: j.posicion === posicion,
-                coincide_incluye: j.posicion && j.posicion.includes(posicion),
-                coincide_split_coma: j.posicion && j.posicion.split(',').some(p => p.trim().toUpperCase() === posicion.toUpperCase()),
-                coincide_split_espacio: j.posicion && j.posicion.split(' ').some(p => p.trim().toUpperCase() === posicion.toUpperCase())
-            }));
-            
-            console.log(`   Detalle de posiciones:`);
-            posicionesDisponibles.forEach(p => {
-                console.log(`     - ${p.nombre}: "${p.posicion}" | Exacta: ${p.coincide_exacta} | Incluye: ${p.coincide_incluye} | Coma: ${p.coincide_split_coma} | Espacio: ${p.coincide_split_espacio}`);
-            });
-            
-            const posicionesUnicas = [...new Set(jugadoresAntesDelFiltro.map(j => j.posicion).filter(p => p && p !== 'N/A'))];
-            console.log(`   📍 Posiciones únicas disponibles: [${posicionesUnicas.join(', ')}]`);
-        }
-    }
-    
-    console.log(`🎯 RESULTADO FINAL: ${jugadoresFiltrados.length} jugadores filtrados`);
-    
-    return jugadoresFiltrados;
+    document.getElementById('equipos-comparacion-container').style.display = 'block';
+    document.getElementById('jugadores-comparacion-container').style.display = 'none';
+    window.comparacionData.currentMode = 'equipos';
+    console.log('📊 Modo: Comparación de equipos');
 }
 
-// ✅ FUNCIÓN MEJORADA PARA ACTUALIZAR LISTA
-function actualizarListaJugadores(selectId, equipoId, posicion = '') {
-    console.log(`\n🔄 ACTUALIZANDO LISTA ${selectId}:`);
-    console.log(`   Equipo seleccionado: ${equipoId}`);
-    console.log(`   Posición seleccionada: '${posicion}'`);
-    
-    const select = document.getElementById(selectId);
-    if (!select) {
-        console.error(`❌ Select ${selectId} no encontrado`);
-        return;
+function showJugadoresComparacion() {
+    // ✅ LIMPIAR GRÁFICO DE EQUIPOS ANTES DE OCULTAR
+    if (window.currentEquiposChart) {
+        try {
+            window.currentEquiposChart.dispose();
+            window.currentEquiposChart = null;
+        } catch (e) {
+            console.warn('⚠️ Error limpiando gráfico de equipos:', e);
+        }
     }
-    
-    const jugadoresFiltrados = filtrarJugadores(equipoId, posicion);
-    
-    // ✅ LIMPIAR OPCIONES
-    select.innerHTML = '';
-    
-    if (!equipoId) {
-        select.innerHTML = '<option value="">Primero selecciona equipo</option>';
-        select.disabled = true;
-        console.log(`   ℹ️ Sin equipo seleccionado, deshabilitando select`);
-        return;
-    }
-    
-    if (jugadoresFiltrados.length === 0) {
-        select.innerHTML = '<option value="">No hay jugadores disponibles</option>';
-        select.disabled = true;
-        console.warn(`   ⚠️ NO hay jugadores disponibles para equipo ${equipoId} y posición '${posicion}'`);
-        return;
-    }
-    
-    // ✅ AGREGAR OPCIÓN POR DEFECTO
-    select.innerHTML = '<option value="">Selecciona jugador</option>';
-    
-    // ✅ AGREGAR JUGADORES FILTRADOS
-    jugadoresFiltrados.forEach(jugador => {
-        const option = document.createElement('option');
-        option.value = jugador.id;
-        option.textContent = `${jugador.nombre} (${jugador.posicion || 'N/A'})`;
-        select.appendChild(option);
-    });
-    
-    select.disabled = false;
-    console.log(`   ✅ Lista ${selectId} actualizada con ${jugadoresFiltrados.length} jugadores`);
+
+    document.getElementById('equipos-comparacion-container').style.display = 'none';
+    document.getElementById('jugadores-comparacion-container').style.display = 'block';
+    window.comparacionData.currentMode = 'jugadores';
+    console.log('👥 Modo: Comparación de jugadores');
 }
 
-// ✅ EVENT LISTENERS MEJORADOS PARA FILTROS DE JUGADORES
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Configurando event listeners para jugadores...');
+// ✅ FUNCIÓN PARA CONFIGURAR EVENT LISTENERS
+function setupEventListeners() {
+    // ✅ EQUIPOS
+    const equipo1Select = document.getElementById('equipo1-select');
+    const equipo2Select = document.getElementById('equipo2-select');
+    const grupoEquiposSelect = document.getElementById('grupo-select-equipos');
     
-    // Selectores de equipo para jugadores
+    if (equipo1Select) {
+        equipo1Select.addEventListener('change', compararEquipos);
+    }
+    if (equipo2Select) {
+        equipo2Select.addEventListener('change', compararEquipos);
+    }
+    if (grupoEquiposSelect) {
+        grupoEquiposSelect.addEventListener('change', compararEquipos);
+    }
+    
+    // ✅ BOTONES DE MODO EQUIPOS
+    const btnGraficosEquipos = document.getElementById('btn-graficos-equipos');
+    const btnEstadisticasEquipos = document.getElementById('btn-estadisticas-equipos');
+    
+    if (btnGraficosEquipos) {
+        btnGraficosEquipos.addEventListener('click', () => toggleModoEquipos('graficos'));
+    }
+    if (btnEstadisticasEquipos) {
+        btnEstadisticasEquipos.addEventListener('click', () => toggleModoEquipos('estadisticas'));
+    }
+    
+    // ✅ JUGADORES
     const equipoJugador1Select = document.getElementById('equipo-jugador1-select');
     const equipoJugador2Select = document.getElementById('equipo-jugador2-select');
-    const posicionSelect = document.getElementById('posicion-select-jugadores');
-    
-    // ✅ CUANDO CAMBIA EL EQUIPO DEL JUGADOR 1
-    if (equipoJugador1Select) {
-        equipoJugador1Select.addEventListener('change', function() {
-            const equipoId = this.value;
-            const posicion = posicionSelect ? posicionSelect.value : '';
-            console.log(`🔄 Cambió equipo jugador 1: ${equipoId}`);
-            actualizarListaJugadores('jugador1-select', equipoId, posicion);
-        });
-    }
-    
-    // ✅ CUANDO CAMBIA EL EQUIPO DEL JUGADOR 2
-    if (equipoJugador2Select) {
-        equipoJugador2Select.addEventListener('change', function() {
-            const equipoId = this.value;
-            const posicion = posicionSelect ? posicionSelect.value : '';
-            console.log(`🔄 Cambió equipo jugador 2: ${equipoId}`);
-            actualizarListaJugadores('jugador2-select', equipoId, posicion);
-        });
-    }
-    
-    // ✅ CUANDO CAMBIA LA POSICIÓN
-    if (posicionSelect) {
-        posicionSelect.addEventListener('change', function() {
-            const posicion = this.value;
-            console.log(`🔄 Cambió posición: ${posicion}`);
-            
-            // ✅ ACTUALIZAR LISTAS DE JUGADORES SEGÚN EQUIPO Y POSICIÓN
-            const equipoId1 = equipoJugador1Select ? equipoJugador1Select.value : '';
-            const equipoId2 = equipoJugador2Select ? equipoJugador2Select.value : '';
-            
-            actualizarListaJugadores('jugador1-select', equipoId1, posicion);
-            actualizarListaJugadores('jugador2-select', equipoId2, posicion);
-        });
-    }
-    
-    // ✅ INICIALIZAR SELECTS DE JUGADORES SI YA HAY EQUIPOS SELECCIONADOS
-    const equipoId1 = equipoJugador1Select ? equipoJugador1Select.value : '';
-    const equipoId2 = equipoJugador2Select ? equipoJugador2Select.value : '';
-    
-    if (equipoId1) {
-        actualizarListaJugadores('jugador1-select', equipoId1);
-    }
-    
-    if (equipoId2) {
-        actualizarListaJugadores('jugador2-select', equipoId2);
-    }
-});
-
-// ✅ VARIABLES GLOBALES PARA JUGADORES
-let jugadoresActuales = {};
-let grupoActualJugadores = 'Ofensivos';
-let modoActualJugadores = 'graficos'; // 'graficos' o 'estadisticas'
-
-// ✅ EVENT LISTENERS PARA COMPARACIÓN DE JUGADORES CON MODOS
-document.addEventListener('DOMContentLoaded', function() {
-    // ✅ ELEMENTOS DOM PARA JUGADORES
-    const btnGraficosJugadores = document.getElementById('btn-graficos-jugadores');
-    const btnEstadisticasJugadores = document.getElementById('btn-estadisticas-jugadores');
-    const containerGraficoJugadores = document.getElementById('radar-comparacion-jugadores');
-    const containerEstadisticasJugadores = document.getElementById('estadisticas-comparacion-jugadores');
-    
-    // ✅ FUNCIÓN PARA CAMBIAR MODO JUGADORES
-    function cambiarModoJugadores(modo) {
-        modoActualJugadores = modo;
-        
-        if (modo === 'graficos') {
-            btnGraficosJugadores.classList.add('modo-activo');
-            btnEstadisticasJugadores.classList.remove('modo-activo');
-            containerGraficoJugadores.style.display = 'block';
-            containerEstadisticasJugadores.style.display = 'none';
-        } else {
-            btnEstadisticasJugadores.classList.add('modo-activo');
-            btnGraficosJugadores.classList.remove('modo-activo');
-            containerGraficoJugadores.style.display = 'none';
-            containerEstadisticasJugadores.style.display = 'block';
-        }
-        
-        // ✅ ACTUALIZAR VISTA SEGÚN JUGADORES SELECCIONADOS
-        actualizarVistaJugadores();
-    }
-    
-    // ✅ FUNCIÓN PARA ACTUALIZAR VISTA JUGADORES
-    function actualizarVistaJugadores() {
-        const selectJugador1 = document.getElementById('jugador1-select');
-        const selectJugador2 = document.getElementById('jugador2-select');
-        
-        if (!selectJugador1 || !selectJugador2) {
-            return;
-        }
-        
-        const jugadorId1 = parseInt(selectJugador1.value);
-        const jugadorId2 = parseInt(selectJugador2.value);
-        
-        if (!jugadorId1 || !jugadorId2 || jugadorId1 === jugadorId2) {
-            if (modoActualJugadores === 'graficos') {
-                const chartContainer = document.getElementById('radar-comparacion-jugadores');
-                if (chartContainer) {
-                    echarts.getInstanceByDom(chartContainer)?.clear();
-                }
-            } else {
-                containerEstadisticasJugadores.innerHTML = '<div class="no-data">Selecciona dos jugadores diferentes para comparar</div>';
-            }
-            return;
-        }
-        
-        const jugador1 = jugadoresData.find(j => j.id === jugadorId1);
-        const jugador2 = jugadoresData.find(j => j.id === jugadorId2);
-        
-        if (!jugador1 || !jugador2) {
-            console.error('❌ Jugadores no encontrados:', jugadorId1, jugadorId2);
-            return;
-        }
-        
-        // ✅ CARGAR GRUPOS DE ESTADÍSTICAS DE JUGADORES
-        const gruposJugadoresElement = document.getElementById('grupos-stats-jugadores-data');
-        let gruposJugadores = {};
-        
-        if (gruposJugadoresElement) {
-            try {
-                gruposJugadores = JSON.parse(gruposJugadoresElement.textContent.trim());
-            } catch (error) {
-                console.error('❌ Error parseando grupos de jugadores:', error);
-                return;
-            }
-        }
-        
-        if (modoActualJugadores === 'graficos') {
-            console.log('🎯 Comparando jugadores (gráfico):', jugador1.nombre, 'vs', jugador2.nombre);
-            generarGraficoRadarJugadores(jugador1, jugador2, gruposJugadores);
-        } else {
-            console.log('🎯 Comparando jugadores (estadísticas):', jugador1.nombre, 'vs', jugador2.nombre);
-            generarTablaEstadisticasJugadores(jugador1, jugador2, gruposJugadores);
-        }
-    }
-    
-    // ✅ FUNCIÓN PARA GENERAR TABLA DE ESTADÍSTICAS JUGADORES - TODAS JUNTAS
-    function generarTablaEstadisticasJugadores(jugador1, jugador2, grupos) {
-        let html = `
-            <div class="estadisticas-header">
-                <h3>Comparación Completa: ${jugador1.nombre} vs ${jugador2.nombre}</h3>
-                <div class="info-jugadores">
-                    <div class="jugador-info jugador1-info">
-                        <span class="nombre-jugador">${jugador1.nombre}</span>
-                        <span class="equipo-jugador">${jugador1.equipo}</span>
-                        <span class="posicion-jugador">${jugador1.posicion}</span>
-                    </div>
-                    <div class="vs-separator">VS</div>
-                    <div class="jugador-info jugador2-info">
-                        <span class="nombre-jugador">${jugador2.nombre}</span>
-                        <span class="equipo-jugador">${jugador2.equipo}</span>
-                        <span class="posicion-jugador">${jugador2.posicion}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="tabla-comparacion">
-        `;
-        
-        // ✅ ITERAR POR CADA GRUPO DE ESTADÍSTICAS
-        Object.entries(grupos).forEach(([nombreGrupo, estadisticasGrupo]) => {
-            html += `
-                <div class="grupo-estadisticas">
-                    <h4 class="grupo-titulo">${nombreGrupo}</h4>
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>Estadística</th>
-                                <th class="jugador-col jugador1-col">${jugador1.nombre}</th>
-                                <th class="jugador-col jugador2-col">${jugador2.nombre}</th>
-                                <th>Diferencia</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            // ✅ ITERAR POR CADA ESTADÍSTICA DEL GRUPO
-            estadisticasGrupo.forEach(([nombre, campo]) => {
-                const valor1 = jugador1[campo] || 0;
-                const valor2 = jugador2[campo] || 0;
-                const percentil1 = jugador1[`${campo}_percentil`] || 50;
-                const percentil2 = jugador2[`${campo}_percentil`] || 50;
-                
-                // ✅ FORMATEAR VALORES SEGÚN EL TIPO
-                const valorFormateado1 = formatearValorJugador(valor1, campo);
-                const valorFormateado2 = formatearValorJugador(valor2, campo);
-                
-                const diferencia = (valor1 - valor2).toFixed(2);
-                const diferenciaClass = diferencia > 0 ? 'positiva' : diferencia < 0 ? 'negativa' : 'neutra';
-                const diferenciaSymbol = diferencia > 0 ? '+' : '';
-                
-                // ✅ DETERMINAR CUÁL JUGADOR ES MEJOR EN ESTA ESTADÍSTICA
-                const jugador1Mejor = valor1 > valor2;
-                const jugador2Mejor = valor2 > valor1;
-                
-                html += `
-                    <tr>
-                        <td class="stat-name">${nombre}</td>
-                        <td class="stat-value jugador1-col ${jugador1Mejor ? 'mejor-valor' : ''}">
-                            <div class="valor-principal">${valorFormateado1}</div>
-                            <div class="percentil">P${percentil1}</div>
-                        </td>
-                        <td class="stat-value jugador2-col ${jugador2Mejor ? 'mejor-valor' : ''}">
-                            <div class="valor-principal">${valorFormateado2}</div>
-                            <div class="percentil">P${percentil2}</div>
-                        </td>
-                        <td class="diferencia ${diferenciaClass}">
-                            ${diferenciaSymbol}${diferencia}
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        });
-        
-        html += `</div>`;
-        
-        containerEstadisticasJugadores.innerHTML = html;
-    }
-    
-    // ✅ FUNCIÓN AUXILIAR PARA FORMATEAR VALORES DE JUGADORES
-    function formatearValorJugador(valor, campo) {
-        // Campos de porcentaje
-        if (campo.includes('percentage') || campo.includes('accuracy') || campo.includes('success')) {
-            return `${valor.toFixed(1)}%`;
-        }
-        
-        // Campos decimales (xG, xA, etc.)
-        if (campo.includes('xg') || campo.includes('xa') || campo.includes('expected')) {
-            return valor.toFixed(2);
-        }
-        
-        // Campos enteros
-        return Math.round(valor);
-    }
-    
-    // ✅ EVENT LISTENERS PARA BOTONES DE MODO JUGADORES
-    if (btnGraficosJugadores) {
-        btnGraficosJugadores.addEventListener('click', () => cambiarModoJugadores('graficos'));
-    }
-    
-    if (btnEstadisticasJugadores) {
-        btnEstadisticasJugadores.addEventListener('click', () => cambiarModoJugadores('estadisticas'));
-    }
-    
-    // ✅ EVENT LISTENERS PARA SELECCIÓN DE JUGADORES
     const jugador1Select = document.getElementById('jugador1-select');
     const jugador2Select = document.getElementById('jugador2-select');
     const grupoJugadoresSelect = document.getElementById('grupo-select-jugadores');
     
-    if (jugador1Select) {
-        jugador1Select.addEventListener('change', actualizarVistaJugadores);
-    }
-    
-    if (jugador2Select) {
-        jugador2Select.addEventListener('change', actualizarVistaJugadores);
-    }
-    
-    if (grupoJugadoresSelect) {
-        grupoJugadoresSelect.addEventListener('change', function() {
-            grupoActualJugadores = this.value;
-            actualizarVistaJugadores();
+    if (equipoJugador1Select) {
+        equipoJugador1Select.addEventListener('change', function() {
+            cargarJugadoresEquipo(this.value, 'jugador1-select');
         });
     }
+    if (equipoJugador2Select) {
+        equipoJugador2Select.addEventListener('change', function() {
+            cargarJugadoresEquipo(this.value, 'jugador2-select');
+        });
+    }
+    if (jugador1Select) {
+        jugador1Select.addEventListener('change', compararJugadores);
+    }
+    if (jugador2Select) {
+        jugador2Select.addEventListener('change', compararJugadores);
+    }
+    if (grupoJugadoresSelect) {
+        grupoJugadoresSelect.addEventListener('change', compararJugadores);
+    }
     
-    // ✅ INICIALIZAR MODO GRÁFICO POR DEFECTO
-    cambiarModoJugadores('graficos');
-});
+    // ✅ BOTONES DE MODO JUGADORES
+    const btnGraficosJugadores = document.getElementById('btn-graficos-jugadores');
+    const btnEstadisticasJugadores = document.getElementById('btn-estadisticas-jugadores');
+    
+    if (btnGraficosJugadores) {
+        btnGraficosJugadores.addEventListener('click', () => toggleModoJugadores('graficos'));
+    }
+    if (btnEstadisticasJugadores) {
+        btnEstadisticasJugadores.addEventListener('click', () => toggleModoJugadores('estadisticas'));
+    }
+}
 
-// ✅ ACTUALIZAR FUNCIÓN GENERARGRAFICOJUGADORES PARA USAR VARIABLES GLOBALES
-function generarGraficoRadarJugadores(jugador1, jugador2, grupos) {
-    const grupoSelect = document.getElementById('grupo-select-jugadores');
-    const grupoSeleccionado = grupoSelect ? grupoSelect.value : 'Ofensivos';
+// ✅ FUNCIÓN PARA CARGAR JUGADORES DE UN EQUIPO
+async function cargarJugadoresEquipo(equipoId, selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
     
-    // ✅ ACTUALIZAR VARIABLES GLOBALES
-    grupoActualJugadores = grupoSeleccionado;
-    jugadoresActuales = {
-        [jugador1.nombre]: jugador1,
-        [jugador2.nombre]: jugador2
-    };
-    
+    select.innerHTML = '<option value="">Cargando jugadores...</option>';
+    select.disabled = true;
+
+    if (!equipoId) {
+        select.innerHTML = '<option value="">Primero selecciona equipo</option>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/jugadores/`);
+        const data = await response.json();
+
+        select.innerHTML = '<option value="">Selecciona jugador</option>';
+        
+        if (data.jugadores && data.jugadores.length > 0) {
+            data.jugadores.forEach(jugador => {
+                const option = document.createElement('option');
+                option.value = jugador.id;
+                option.textContent = `${jugador.nombre} (${jugador.posicion || 'POS'})`;
+                select.appendChild(option);
+            });
+        } else {
+            select.innerHTML = '<option value="">No hay jugadores disponibles</option>';
+        }
+        
+        select.disabled = false;
+        
+    } catch (error) {
+        console.error('Error cargando jugadores:', error);
+        select.innerHTML = '<option value="">Error cargando jugadores</option>';
+        select.disabled = false;
+    }
+}
+
+// ✅ FUNCIÓN PARA COMPARAR EQUIPOS (MEJORADA)
+async function compararEquipos() {
+    const equipo1Id = document.getElementById('equipo1-select')?.value;
+    const equipo2Id = document.getElementById('equipo2-select')?.value;
+    const grupo = document.getElementById('grupo-select-equipos')?.value;
+
+    console.log('🔄 Comparando equipos:', {equipo1Id, equipo2Id, grupo});
+
+    if (!equipo1Id || !equipo2Id || !grupo) {
+        const chartContainer = document.getElementById('radar-comparacion-equipos');
+        if (chartContainer) {
+            chartContainer.innerHTML = '<div class="no-selection">Selecciona dos equipos y un grupo para comparar</div>';
+        }
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING EN EL CONTENEDOR
+    const chartContainer = document.getElementById('radar-comparacion-equipos');
+    if (chartContainer) {
+        chartContainer.innerHTML = '<div class="loading-chart">🔄 Cargando comparación...</div>';
+    }
+
+    try {
+        const csrfToken = getCsrfToken();
+        
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-equipos/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                equipo1_id: equipo1Id,
+                equipo2_id: equipo2Id,
+                grupo: grupo
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Datos de comparación equipos:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR GRÁFICO RADAR
+        renderRadarEquipos(data);
+
+    } catch (error) {
+        console.error('❌ Error comparando equipos:', error);
+        if (chartContainer) {
+            chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
+        }
+    }
+}
+
+// ✅ FUNCIÓN PARA COMPARAR JUGADORES (MEJORADA)
+async function compararJugadores() {
+    const jugador1Id = document.getElementById('jugador1-select')?.value;
+    const jugador2Id = document.getElementById('jugador2-select')?.value;
+    const grupo = document.getElementById('grupo-select-jugadores')?.value;
+
+    console.log('🔄 Comparando jugadores:', {jugador1Id, jugador2Id, grupo});
+
+    if (!jugador1Id || !jugador2Id || !grupo) {
+        const chartContainer = document.getElementById('radar-comparacion-jugadores');
+        if (chartContainer) {
+            chartContainer.innerHTML = '<div class="no-selection">Selecciona dos jugadores y un grupo para comparar</div>';
+        }
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING EN EL CONTENEDOR
+    const chartContainer = document.getElementById('radar-comparacion-jugadores');
+    if (chartContainer) {
+        chartContainer.innerHTML = '<div class="loading-chart">🔄 Cargando comparación...</div>';
+    }
+
+    try {
+        const csrfToken = getCsrfToken();
+        
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-jugadores/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                jugador1_id: jugador1Id,
+                jugador2_id: jugador2Id,
+                grupo: grupo
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Datos de comparación jugadores:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR GRÁFICO RADAR
+        renderRadarJugadores(data);
+
+    } catch (error) {
+        console.error('❌ Error comparando jugadores:', error);
+        if (chartContainer) {
+            chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
+        }
+    }
+}
+
+// ✅ FUNCIÓN PARA RENDERIZAR RADAR DE EQUIPOS (CORREGIDA)
+function renderRadarEquipos(data) {
+    const chartContainer = document.getElementById('radar-comparacion-equipos');
+    if (!chartContainer) {
+        console.error('❌ Contenedor del gráfico de equipos no encontrado');
+        return;
+    }
+
+    // ✅ DESTRUIR GRÁFICO EXISTENTE SI EXISTE
+    if (window.currentEquiposChart) {
+        try {
+            window.currentEquiposChart.dispose();
+            console.log('🔄 Gráfico de equipos anterior destruido');
+        } catch (e) {
+            console.warn('⚠️ Error destruyendo gráfico anterior:', e);
+        }
+        window.currentEquiposChart = null;
+    }
+
+    // ✅ LIMPIAR COMPLETAMENTE EL CONTENEDOR
+    chartContainer.innerHTML = '';
+    chartContainer.style.width = '100%';
+    chartContainer.style.height = '420px';
+
+    // ✅ PEQUEÑA PAUSA PARA ASEGURAR QUE EL DOM SE ACTUALICE
+    setTimeout(() => {
+        try {
+            // ✅ VERIFICAR QUE EL CONTENEDOR SIGUE EXISTIENDO
+            if (!document.getElementById('radar-comparacion-equipos')) {
+                console.warn('⚠️ Contenedor eliminado durante el renderizado');
+                return;
+            }
+
+            // ✅ INICIALIZAR ECHARTS
+            const chart = echarts.init(chartContainer, null, {
+                devicePixelRatio: 2
+            });
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1a1a2e',
+                    borderColor: '#00d4ff',
+                    textStyle: { color: '#fff' },
+                    formatter: function(params) {
+                        const equipoNombre = params.name;
+                        const indicatorIndex = params.dataIndex;
+                        return generarTooltipEquipos(data, equipoNombre, indicatorIndex);
+                    }
+                },
+                legend: {
+                    data: [data.equipo1.nombre, data.equipo2.nombre],
+                    textStyle: { color: '#ffffff' },
+                    top: 20
+                },
+                radar: {
+                    indicator: data.estadisticas.map(stat => ({
+                        name: stat.nombre,
+                        max: Math.max(stat.max_valor, 10),
+                        min: 0
+                    })),
+                    name: {
+                        textStyle: {
+                            color: '#00d4ff',
+                            fontSize: 11
+                        },
+                        formatter: function(value) {
+                            if (value.length > 12) {
+                                return value.substring(0, 12) + '...';
+                            }
+                            return value;
+                        }
+                    },
+                    splitArea: {
+                        areaStyle: {
+                            color: ['rgba(114, 172, 209, 0.1)', 'rgba(114, 172, 209, 0.2)']
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#23243a'
+                        }
+                    },
+                    center: ['50%', '55%'],
+                    radius: '65%'
+                },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: data.valores_equipo1,
+                            name: data.equipo1.nombre,
+                            areaStyle: { color: 'rgba(0, 212, 255, 0.3)' },
+                            lineStyle: { color: '#00d4ff', width: 2 },
+                            itemStyle: { color: '#00d4ff' },
+                            symbolSize: 6
+                        },
+                        {
+                            value: data.valores_equipo2,
+                            name: data.equipo2.nombre,
+                            areaStyle: { color: 'rgba(255, 215, 0, 0.15)' },
+                            lineStyle: { color: '#ffd700', width: 2 },
+                            itemStyle: { color: '#ffd700' },
+                            symbolSize: 6
+                        }
+                    ]
+                }]
+            };
+
+            chart.setOption(option, true);
+            console.log('✅ Gráfico de equipos renderizado');
+
+            // ✅ GUARDAR REFERENCIA
+            window.currentEquiposChart = chart;
+
+            // ✅ EVENTO RESIZE CON PROTECCIÓN
+            const resizeHandler = () => {
+                if (window.currentEquiposChart && document.getElementById('radar-comparacion-equipos')) {
+                    try {
+                        window.currentEquiposChart.resize();
+                    } catch (e) {
+                        console.warn('⚠️ Error en resize del gráfico:', e);
+                    }
+                }
+            };
+
+            // ✅ REMOVER LISTENER ANTERIOR SI EXISTE
+            if (window.equiposResizeHandler) {
+                window.removeEventListener('resize', window.equiposResizeHandler);
+            }
+            window.equiposResizeHandler = resizeHandler;
+            window.addEventListener('resize', resizeHandler);
+
+        } catch (error) {
+            console.error('❌ Error renderizando gráfico de equipos:', error);
+            chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
+        }
+    }, 150); // ✅ Aumentar timeout a 150ms
+}
+
+// ✅ FUNCIÓN PARA RENDERIZAR RADAR DE JUGADORES (CORREGIDA)
+function renderRadarJugadores(data) {
     const chartContainer = document.getElementById('radar-comparacion-jugadores');
     if (!chartContainer) {
         console.error('❌ Contenedor del gráfico de jugadores no encontrado');
         return;
     }
 
-    // ✅ INICIALIZAR ECHARTS PARA JUGADORES
-    chartContainer.style.width = '100%';
-    chartContainer.style.maxWidth = '550px';
-    chartContainer.style.height = '480px';
-    chartContainer.style.margin = '0 auto';
+    // ✅ DESTRUIR GRÁFICO EXISTENTE SI EXISTE
+    if (window.currentJugadoresChart) {
+        try {
+            window.currentJugadoresChart.dispose();
+            console.log('🔄 Gráfico de jugadores anterior destruido');
+        } catch (e) {
+            console.warn('⚠️ Error destruyendo gráfico anterior:', e);
+        }
+        window.currentJugadoresChart = null;
+    }
 
-    const myChartJugadores = echarts.init(chartContainer, null, {devicePixelRatio: 2});
+    // ✅ LIMPIAR COMPLETAMENTE EL CONTENEDOR
+    chartContainer.innerHTML = '';
+    chartContainer.style.width = '100%';
+    chartContainer.style.height = '420px';
+
+    // ✅ PEQUEÑA PAUSA PARA ASEGURAR QUE EL DOM SE ACTUALICE
+    setTimeout(() => {
+        try {
+            // ✅ VERIFICAR QUE EL CONTENEDOR SIGUE EXISTIENDO
+            if (!document.getElementById('radar-comparacion-jugadores')) {
+                console.warn('⚠️ Contenedor eliminado durante el renderizado');
+                return;
+            }
+
+            // ✅ INICIALIZAR ECHARTS
+            const chart = echarts.init(chartContainer, null, {
+                devicePixelRatio: 2
+            });
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1a1a2e',
+                    borderColor: '#00d4ff',
+                    textStyle: { color: '#fff' },
+                    formatter: function(params) {
+                        const jugadorNombre = params.name;
+                        const indicatorIndex = params.dataIndex;
+                        return generarTooltipJugadores(data, jugadorNombre, indicatorIndex);
+                    }
+                },
+                legend: {
+                    data: [data.jugador1.nombre, data.jugador2.nombre],
+                    textStyle: { color: '#ffffff' },
+                    top: 20
+                },
+                radar: {
+                    indicator: data.estadisticas.map(stat => ({
+                        name: stat.nombre,
+                        max: Math.max(stat.max_valor, 10),
+                        min: 0
+                    })),
+                    name: {
+                        textStyle: {
+                            color: '#00d4ff',
+                            fontSize: 11
+                        },
+                        formatter: function(value) {
+                            if (value.length > 12) {
+                                return value.substring(0, 12) + '...';
+                            }
+                            return value;
+                        }
+                    },
+                    splitArea: {
+                        areaStyle: {
+                            color: ['rgba(114, 172, 209, 0.1)', 'rgba(114, 172, 209, 0.2)']
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#23243a'
+                        }
+                    },
+                    center: ['50%', '55%'],
+                    radius: '65%'
+                },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: data.valores_jugador1,
+                            name: data.jugador1.nombre,
+                            areaStyle: { color: 'rgba(0, 212, 255, 0.3)' },
+                            lineStyle: { color: '#00d4ff', width: 2 },
+                            itemStyle: { color: '#00d4ff' },
+                            symbolSize: 6
+                        },
+                        {
+                            value: data.valores_jugador2,
+                            name: data.jugador2.nombre,
+                            areaStyle: { color: 'rgba(255, 215, 0, 0.15)' },
+                            lineStyle: { color: '#ffd700', width: 2 },
+                            itemStyle: { color: '#ffd700' },
+                            symbolSize: 6
+                        }
+                    ]
+                }]
+            };
+
+            chart.setOption(option, true);
+            console.log('✅ Gráfico de jugadores renderizado');
+
+            // ✅ GUARDAR REFERENCIA
+            window.currentJugadoresChart = chart;
+
+            // ✅ EVENTO RESIZE CON PROTECCIÓN
+            const resizeHandler = () => {
+                if (window.currentJugadoresChart && document.getElementById('radar-comparacion-jugadores')) {
+                    try {
+                        window.currentJugadoresChart.resize();
+                    } catch (e) {
+                        console.warn('⚠️ Error en resize del gráfico:', e);
+                    }
+                }
+            };
+
+            // ✅ REMOVER LISTENER ANTERIOR SI EXISTE
+            if (window.jugadoresResizeHandler) {
+                window.removeEventListener('resize', window.jugadoresResizeHandler);
+            }
+            window.jugadoresResizeHandler = resizeHandler;
+            window.addEventListener('resize', resizeHandler);
+
+        } catch (error) {
+            console.error('❌ Error renderizando gráfico de jugadores:', error);
+            chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
+        }
+    }, 150); // ✅ Aumentar timeout a 150ms
+}
+
+// ✅ FUNCIONES PARA ALTERNAR MODOS (AGREGAR AL FINAL DEL ARCHIVO)
+
+// ✅ FUNCIÓN PARA ALTERNAR MODO EQUIPOS
+function toggleModoEquipos(modo) {
+    console.log('🔄 Cambiando modo equipos a:', modo);
     
-    if (!grupos[grupoSeleccionado]) {
-        console.error(`❌ Grupo ${grupoSeleccionado} no encontrado`);
+    const btnGraficos = document.getElementById('btn-graficos-equipos');
+    const btnEstadisticas = document.getElementById('btn-estadisticas-equipos');
+    const radarContainer = document.getElementById('radar-comparacion-equipos');
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-equipos');
+    const grupoSelectContainer = document.querySelector('.controles-superiores-equipos .grupo-select-container');
+    
+    if (modo === 'graficos') {
+        // ✅ ACTIVAR MODO GRÁFICOS
+        btnGraficos.classList.add('modo-activo');
+        btnEstadisticas.classList.remove('modo-activo');
+        
+        // ✅ MOSTRAR SELECTOR DE GRUPO
+        if (grupoSelectContainer) {
+            grupoSelectContainer.style.display = 'block';
+        }
+        
+        if (radarContainer) radarContainer.style.display = 'block';
+        if (estadisticasContainer) estadisticasContainer.style.display = 'none';
+        
+        // ✅ RECOMPARAR EQUIPOS PARA MOSTRAR GRÁFICO
+        compararEquipos();
+        
+    } else if (modo === 'estadisticas') {
+        // ✅ ACTIVAR MODO ESTADÍSTICAS
+        btnGraficos.classList.remove('modo-activo');
+        btnEstadisticas.classList.add('modo-activo');
+        
+        // ✅ OCULTAR SELECTOR DE GRUPO
+        if (grupoSelectContainer) {
+            grupoSelectContainer.style.display = 'none';
+        }
+        
+        if (radarContainer) radarContainer.style.display = 'none';
+        if (estadisticasContainer) estadisticasContainer.style.display = 'block';
+        
+        // ✅ MOSTRAR TODAS LAS ESTADÍSTICAS
+        mostrarTodasEstadisticasEquipos();
+    }
+}
+
+// ✅ FUNCIÓN PARA ALTERNAR MODO JUGADORES (ACTUALIZADA)
+function toggleModoJugadores(modo) {
+    console.log('🔄 Cambiando modo jugadores a:', modo);
+    
+    const btnGraficos = document.getElementById('btn-graficos-jugadores');
+    const btnEstadisticas = document.getElementById('btn-estadisticas-jugadores');
+    const radarContainer = document.getElementById('radar-comparacion-jugadores');
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-jugadores');
+    const grupoSelectContainer = document.querySelector('.controles-superiores-jugadores .grupo-select-container');
+    
+    if (modo === 'graficos') {
+        // ✅ ACTIVAR MODO GRÁFICOS
+        btnGraficos.classList.add('modo-activo');
+        btnEstadisticas.classList.remove('modo-activo');
+        
+        // ✅ MOSTRAR SELECTOR DE GRUPO
+        if (grupoSelectContainer) {
+            grupoSelectContainer.style.display = 'block';
+        }
+        
+        if (radarContainer) radarContainer.style.display = 'block';
+        if (estadisticasContainer) estadisticasContainer.style.display = 'none';
+        
+        // ✅ RECOMPARAR JUGADORES PARA MOSTRAR GRÁFICO
+        compararJugadores();
+        
+    } else if (modo === 'estadisticas') {
+        // ✅ ACTIVAR MODO ESTADÍSTICAS
+        btnGraficos.classList.remove('modo-activo');
+        btnEstadisticas.classList.add('modo-activo');
+        
+        // ✅ OCULTAR SELECTOR DE GRUPO
+        if (grupoSelectContainer) {
+            grupoSelectContainer.style.display = 'none';
+        }
+        
+        if (radarContainer) radarContainer.style.display = 'none';
+        if (estadisticasContainer) estadisticasContainer.style.display = 'block';
+        
+        // ✅ MOSTRAR TODAS LAS ESTADÍSTICAS
+        mostrarTodasEstadisticasJugadores();
+    }
+}
+
+// ✅ FUNCIÓN PARA MOSTRAR ESTADÍSTICAS DE EQUIPOS EN TABLA
+async function mostrarEstadisticasEquipos() {
+    const equipo1Id = document.getElementById('equipo1-select')?.value;
+    const equipo2Id = document.getElementById('equipo2-select')?.value;
+    const grupo = document.getElementById('grupo-select-equipos')?.value;
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-equipos');
+
+    if (!estadisticasContainer) {
+        console.error('❌ Contenedor de estadísticas de equipos no encontrado');
         return;
     }
-    
-    const indicators = [];
-    const data1 = [];
-    const data2 = [];
-    
-    // ✅ USAR PERCENTILES PARA JUGADORES
-    grupos[grupoSeleccionado].forEach(([nombre, campo]) => {
-        const percentil1 = jugador1[`${campo}_percentil`] || 50;
-        const percentil2 = jugador2[`${campo}_percentil`] || 50;
+
+    if (!equipo1Id || !equipo2Id || !grupo) {
+        estadisticasContainer.innerHTML = `
+            <div class="no-data">
+                <i class="bx bx-info-circle"></i>
+                Selecciona dos equipos y un grupo para ver las estadísticas
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING
+    estadisticasContainer.innerHTML = '<div class="loading-chart">🔄 Cargando estadísticas...</div>';
+
+    try {
+        const csrfToken = getCsrfToken();
         
-        indicators.push({ 
-            name: nombre, 
-            max: 100,
-            min: 0
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-equipos/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                equipo1_id: equipo1Id,
+                equipo2_id: equipo2Id,
+                grupo: grupo
+            })
         });
-        
-        data1.push(percentil1);
-        data2.push(percentil2);
-    });
-    
-    // ✅ CONFIGURACIÓN RADAR PARA JUGADORES
-    const option = {
-        backgroundColor: 'transparent',
-        tooltip: { 
-            trigger: 'item',
-            backgroundColor: '#23243a',
-            borderColor: '#00d4ff',
-            borderWidth: 2,
-            textStyle: { color: '#fff', fontSize: 13 },
-            formatter: function(params) {
-                const jugadorNombre = params.name;
-                const indicatorIndex = params.dataIndex;
-                
-                const jugadorData = jugadoresActuales[jugadorNombre];
-                if (!jugadorData) {
-                    return `<div style="color:red;">Error: Jugador ${jugadorNombre} no encontrado</div>`;
-                }
-                
-                return generarTooltipJugadores(jugadorData, jugadorNombre, indicatorIndex, grupos, grupoActualJugadores);
-            }
-        },
-        legend: {
-            data: [jugador1.nombre, jugador2.nombre],
-            top: 5,
-            textStyle: { color: '#fff', fontSize: 11 }
-        },
-        radar: {
-            indicator: indicators,
-            center: ['50%', '52%'],
-            radius: '62%',
-            splitLine: { 
-                lineStyle: { color: '#23243a' } 
-            },
-            splitArea: { 
-                areaStyle: { color: ['#23243a', '#181b23'] } 
-            },
-            axisName: {
-                color: '#00d4ff',
-                fontSize: 12,
-                formatter: function(value) {
-                    const palabras = value.split(' ');
-                    let linea = '';
-                    let resultado = '';
-                    for (let palabra of palabras) {
-                        if ((linea + ' ' + palabra).trim().length > 12) {
-                            resultado += linea.trim() + '\n';
-                            linea = palabra + ' ';
-                        } else {
-                            linea += palabra + ' ';
-                        }
-                    }
-                    resultado += linea.trim();
-                    return resultado;
-                }
-            },
-            axisLabel: {
-                show: true,
-                fontSize: 9,
-                color: '#666',
-                formatter: function(value) {
-                    return `P${value}`;
-                }
-            }
-        },
-        series: [{
-            name: 'Comparación Jugadores',
-            type: 'radar',
-            data: [
-                {
-                    value: data1,
-                    name: jugador1.nombre,
-                    areaStyle: { color: 'rgba(0,212,255,0.3)' },
-                    itemStyle: { color: '#00d4ff' },
-                    lineStyle: { color: '#00d4ff', width: 2 }
-                },
-                {
-                    value: data2,
-                    name: jugador2.nombre,
-                    areaStyle: { color: 'rgba(255,215,0,0.15)' },
-                    itemStyle: { color: '#ffd700' },
-                    lineStyle: { color: '#ffd700', width: 2 }
-                }
-            ],
-            symbolSize: 5
-        }]
-    };
-    
-    myChartJugadores.setOption(option);
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Datos de estadísticas equipos:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR TABLA DE ESTADÍSTICAS
+        renderTablaEstadisticasEquipos(data, estadisticasContainer);
+
+    } catch (error) {
+        console.error('❌ Error cargando estadísticas de equipos:', error);
+        estadisticasContainer.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error"></i>
+                Error: ${error.message}
+            </div>
+        `;
+    }
 }
 
-// ✅ FUNCIÓN AUXILIAR PARA TOOLTIP DE JUGADORES
-function generarTooltipJugadores(jugadorData, jugadorNombre, indicatorIndex, grupos, grupoActual) {
-    let tooltip = `<div style="font-weight:bold;color:#00d4ff;margin-bottom:8px;font-size:16px;">${jugadorNombre}</div>`;
-    tooltip += `<div style="color:#ffd700;margin-bottom:5px;">${jugadorData.equipo} - ${jugadorData.posicion}</div>`;
-    
-    grupos[grupoActual].forEach(([nombre, campo], index) => {
-        const valorOriginal = jugadorData[campo] || 0;
-        const percentil = jugadorData[`${campo}_percentil`] || 50;
+// ✅ FUNCIÓN PARA MOSTRAR ESTADÍSTICAS DE JUGADORES EN TABLA
+async function mostrarEstadisticasJugadores() {
+    const jugador1Id = document.getElementById('jugador1-select')?.value;
+    const jugador2Id = document.getElementById('jugador2-select')?.value;
+    const grupo = document.getElementById('grupo-select-jugadores')?.value;
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-jugadores');
+
+    if (!estadisticasContainer) {
+        console.error('❌ Contenedor de estadísticas de jugadores no encontrado');
+        return;
+    }
+
+    if (!jugador1Id || !jugador2Id || !grupo) {
+        estadisticasContainer.innerHTML = `
+            <div class="no-data">
+                <i class="bx bx-info-circle"></i>
+                Selecciona dos jugadores y un grupo para ver las estadísticas
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING
+    estadisticasContainer.innerHTML = '<div class="loading-chart">🔄 Cargando estadísticas...</div>';
+
+    try {
+        const csrfToken = getCsrfToken();
         
-        const esActual = index === indicatorIndex;
-        const estilo = esActual ? 
-            'style="background-color:rgba(0,212,255,0.2);padding:2px 4px;border-radius:3px;margin:1px 0;"' : 
-            'style="margin:1px 0;"';
-        
-        tooltip += `<div ${estilo}>${nombre}: <b style="color:#fff;">${valorOriginal}</b> <span style="color:#ffd700;">(P${percentil})</span></div>`;
-    });
-    
-    return tooltip;
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-jugadores/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                jugador1_id: jugador1Id,
+                jugador2_id: jugador2Id,
+                grupo: grupo
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Datos de estadísticas jugadores:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR TABLA DE ESTADÍSTICAS
+        renderTablaEstadisticasJugadores(data, estadisticasContainer);
+
+    } catch (error) {
+        console.error('❌ Error cargando estadísticas de jugadores:', error);
+        estadisticasContainer.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error"></i>
+                Error: ${error.message}
+            </div>
+        `;
+    }
 }
 
-// ✅ EVENT LISTENERS PARA COMPARACIÓN DE JUGADORES
-document.addEventListener('DOMContentLoaded', function() {
-    // Selectores de jugador
-    const jugador1Select = document.getElementById('jugador1-select');
-    const jugador2Select = document.getElementById('jugador2-select');
-    const grupoJugadoresSelect = document.getElementById('grupo-select-jugadores');
-    
-    // ✅ CARGAR GRUPOS DE ESTADÍSTICAS DE JUGADORES
-    const gruposJugadoresElement = document.getElementById('grupos-stats-jugadores-data');
-    let gruposJugadores = {};
-    
-    if (gruposJugadoresElement) {
-        try {
-            gruposJugadores = JSON.parse(gruposJugadoresElement.textContent.trim());
-            console.log('✅ Grupos de estadísticas de jugadores cargados:', Object.keys(gruposJugadores));
-        } catch (error) {
-            console.error('❌ Error parseando grupos de jugadores:', error);
-        }
+// ✅ FUNCIÓN OPTIMIZADA PARA MOSTRAR TODAS LAS ESTADÍSTICAS DE EQUIPOS
+async function mostrarTodasEstadisticasEquipos() {
+    const equipo1Id = document.getElementById('equipo1-select')?.value;
+    const equipo2Id = document.getElementById('equipo2-select')?.value;
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-equipos');
+
+    console.log('🔍 Debug - IDs:', { equipo1Id, equipo2Id });
+
+    if (!estadisticasContainer) {
+        console.error('❌ Contenedor de estadísticas de equipos no encontrado');
+        return;
     }
-    
-    // ✅ FUNCIÓN PARA ACTUALIZAR COMPARACIÓN DE JUGADORES
-    function actualizarComparacionJugadores() {
-        const jugador1Select = document.getElementById('jugador1-select');
-        const jugador2Select = document.getElementById('jugador2-select');
+
+    if (!equipo1Id || !equipo2Id) {
+        estadisticasContainer.innerHTML = `
+            <div class="no-data">
+                <i class="bx bx-info-circle"></i>
+                Selecciona dos equipos para ver todas las estadísticas
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING
+    estadisticasContainer.innerHTML = '<div class="loading-chart">🔄 Cargando todas las estadísticas...</div>';
+
+    try {
+        const csrfToken = getCsrfToken();
+        const requestData = {
+            equipo1_id: equipo1Id,
+            equipo2_id: equipo2Id
+        };
         
-        if (!jugador1Select || !jugador2Select) {
-            return;
+        console.log('📤 Enviando request:', requestData);
+        console.log('🔑 CSRF Token:', csrfToken);
+        
+        // ✅ UNA SOLA PETICIÓN PARA TODAS LAS ESTADÍSTICAS
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-equipos-completo/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response headers:', response.headers);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Response error text:', errorText);
+            throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
         }
+
+        const data = await response.json();
+        console.log('✅ Response data:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR TABLA COMPLETA OPTIMIZADA
+        renderTablaCompletaEquiposOptimizada(data, estadisticasContainer);
+
+    } catch (error) {
+        console.error('❌ Error completo:', error);
+        estadisticasContainer.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error"></i>
+                Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// ✅ FUNCIÓN OPTIMIZADA PARA MOSTRAR TODAS LAS ESTADÍSTICAS DE JUGADORES
+async function mostrarTodasEstadisticasJugadores() {
+    const jugador1Id = document.getElementById('jugador1-select')?.value;
+    const jugador2Id = document.getElementById('jugador2-select')?.value;
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-jugadores');
+
+    if (!estadisticasContainer) {
+        console.error('❌ Contenedor de estadísticas de jugadores no encontrado');
+        return;
+    }
+
+    if (!jugador1Id || !jugador2Id) {
+        estadisticasContainer.innerHTML = `
+            <div class="no-data">
+                <i class="bx bx-info-circle"></i>
+                Selecciona dos jugadores para ver todas las estadísticas
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ MOSTRAR LOADING
+    estadisticasContainer.innerHTML = '<div class="loading-chart">🔄 Cargando todas las estadísticas...</div>';
+
+    try {
+        const csrfToken = getCsrfToken();
         
-        const jugadorId1 = parseInt(jugador1Select.value);
-        const jugadorId2 = parseInt(jugador2Select.value);
+        // ✅ UNA SOLA PETICIÓN PARA TODAS LAS ESTADÍSTICAS
+        const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-jugadores-completo/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                jugador1_id: jugador1Id,
+                jugador2_id: jugador2Id
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Todas las estadísticas de jugadores:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // ✅ RENDERIZAR TABLA COMPLETA OPTIMIZADA
+        renderTablaCompletaJugadoresOptimizada(data, estadisticasContainer);
+
+    } catch (error) {
+        console.error('❌ Error cargando todas las estadísticas de jugadores:', error);
+        estadisticasContainer.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error"></i>
+                Error: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// ✅ FUNCIÓN OPTIMIZADA PARA RENDERIZAR TABLA COMPLETA DE EQUIPOS
+function renderTablaCompletaEquiposOptimizada(data, container) {
+    const { equipo1, equipo2, grupos } = data;
+    
+    let html = `
+        <div class="tabla-comparacion completa">
+            <div class="estadisticas-header">
+                <h3>Comparación Completa: ${equipo1.nombre} vs ${equipo2.nombre}</h3>
+                <p class="subtitulo">Todas las estadísticas por categorías</p>
+            </div>
+            
+            <!-- ✅ INFORMACIÓN DE EQUIPOS -->
+            <div class="info-equipos">
+                <div class="equipo-info equipo1-info">
+                    <div class="nombre-equipo">${equipo1.nombre}</div>
+                    <div class="liga-equipo">${equipo1.liga}</div>
+                </div>
+                <div class="vs-separator">VS</div>
+                <div class="equipo-info equipo2-info">
+                    <div class="nombre-equipo">${equipo2.nombre}</div>
+                    <div class="liga-equipo">${equipo2.liga}</div>
+                </div>
+            </div>
+    `;
+
+    // ✅ GENERAR TABLA PARA CADA GRUPO (MÁS RÁPIDO)
+    Object.entries(grupos).forEach(([grupoKey, grupoData]) => {
+        const { nombre, icono, estadisticas, valores_equipo1, valores_equipo2 } = grupoData;
         
-        if (!jugadorId1 || !jugadorId2 || jugadorId1 === jugadorId2) {
-            const chartContainer = document.getElementById('radar-comparacion-jugadores');
-            if (chartContainer) {
-                echarts.getInstanceByDom(chartContainer)?.clear();
+        html += `
+            <div class="grupo-estadisticas">
+                <h4 class="grupo-titulo">
+                    <i class="bx ${icono}"></i>
+                    ${nombre}
+                </h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th class="stat-name">Estadística</th>
+                            <th class="equipo1-col">${equipo1.nombre}</th>
+                            <th class="equipo2-col">${equipo2.nombre}</th>
+                            <th class="diferencia-col">Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        // ✅ AGREGAR FILAS DE ESTADÍSTICAS (OPTIMIZADO)
+        estadisticas.forEach((stat, index) => {
+            const valor1 = valores_equipo1[index];
+            const valor2 = valores_equipo2[index];
+            const diferencia = valor1 - valor2;
+            
+            const equipo1Mejor = valor1 > valor2;
+            const equipo2Mejor = valor2 > valor1;
+            
+            const clase1 = equipo1Mejor ? 'mejor-valor equipo1-col' : 'equipo1-col';
+            const clase2 = equipo2Mejor ? 'mejor-valor equipo2-col' : 'equipo2-col';
+            
+            let claseDiferencia = 'diferencia neutra';
+            let simboloDiferencia = '';
+            if (diferencia > 0) {
+                claseDiferencia = 'diferencia positiva';
+                simboloDiferencia = '+';
+            } else if (diferencia < 0) {
+                claseDiferencia = 'diferencia negativa';
+                simboloDiferencia = '';
             }
-            return;
-        }
-        
-        const jugador1 = jugadoresData.find(j => j.id === jugadorId1);
-        const jugador2 = jugadoresData.find(j => j.id === jugadorId2);
-        
-        if (!jugador1 || !jugador2) {
-            console.error('❌ Jugadores no encontrados:', jugadorId1, jugadorId2);
-            return;
-        }
-        
-        console.log('🎯 Comparando jugadores:', jugador1.nombre, 'vs', jugador2.nombre);
-        generarGraficoRadarJugadores(jugador1, jugador2, gruposJugadores);
-    }
-    
-    // ✅ EVENT LISTENERS PARA SELECCIÓN DE JUGADORES
-    if (jugador1Select) {
-        jugador1Select.addEventListener('change', actualizarComparacionJugadores);
-    }
-    
-    if (jugador2Select) {
-        jugador2Select.addEventListener('change', actualizarComparacionJugadores);
-    }
-    
-    if (grupoJugadoresSelect) {
-        grupoJugadoresSelect.addEventListener('change', actualizarComparacionJugadores);
-    }
-});
 
-// BUSCAR ESTA LÍNEA (aproximadamente línea 500-600):
-fetch(`/stats_jugadores/`)
+            html += `
+                <tr>
+                    <td class="stat-name">${stat.nombre}</td>
+                    <td class="${clase1}">
+                        <div class="stat-value">
+                            <div class="valor-principal">${valor1.toFixed(2)}</div>
+                        </div>
+                    </td>
+                    <td class="${clase2}">
+                        <div class="stat-value">
+                            <div class="valor-principal">${valor2.toFixed(2)}</div>
+                        </div>
+                    </td>
+                    <td class="${claseDiferencia}">
+                        ${simboloDiferencia}${diferencia.toFixed(2)}
+                    </td>
+                </tr>
+            `;
+        });
 
-// CAMBIAR A:
-fetch(`https://scoutgine-backend.onrender.com/stats_jugadores/`)
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
 
-// Y TODAS LAS OTRAS LÍNEAS SIMILARES:
-fetch(`/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`)
-// CAMBIAR A:
-fetch(`https://scoutgine-backend.onrender.com/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`)
+    html += '</div>';
+    container.innerHTML = html;
+    console.log('✅ Tabla completa de estadísticas de equipos renderizada (OPTIMIZADA)');
+}
+
+// ✅ FUNCIÓN OPTIMIZADA PARA RENDERIZAR TABLA COMPLETA DE JUGADORES
+function renderTablaCompletaJugadoresOptimizada(data, container) {
+    const { jugador1, jugador2, grupos } = data;
+    
+    let html = `
+        <div class="tabla-comparacion completa">
+            <div class="estadisticas-header">
+                <h3>Comparación Completa: ${jugador1.nombre} vs ${jugador2.nombre}</h3>
+                <p class="subtitulo">Todas las estadísticas por categorías</p>
+            </div>
+            
+            <!-- ✅ INFORMACIÓN DE JUGADORES -->
+            <div class="info-jugadores">
+                <div class="jugador-info jugador1-info">
+                    <div class="nombre-jugador">${jugador1.nombre}</div>
+                    <div class="equipo-jugador">${jugador1.equipo}</div>
+                    <div class="posicion-jugador">${jugador1.posicion}</div>
+                    <div class="edad-pais">${jugador1.edad} años - ${jugador1.pais}</div>
+                </div>
+                <div class="vs-separator">VS</div>
+                <div class="jugador-info jugador2-info">
+                    <div class="nombre-jugador">${jugador2.nombre}</div>
+                    <div class="equipo-jugador">${jugador2.equipo}</div>
+                    <div class="posicion-jugador">${jugador2.posicion}</div>
+                    <div class="edad-pais">${jugador2.edad} años - ${jugador2.pais}</div>
+                </div>
+            </div>
+    `;
+
+    // ✅ GENERAR TABLA PARA CADA GRUPO (MÁS RÁPIDO)
+    Object.entries(grupos).forEach(([grupoKey, grupoData]) => {
+        const { nombre, icono, estadisticas, valores_jugador1, valores_jugador2 } = grupoData;
+        
+        html += `
+            <div class="grupo-estadisticas">
+                <h4 class="grupo-titulo">
+                    <i class="bx ${icono}"></i>
+                    ${nombre}
+                </h4>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th class="stat-name">Estadística</th>
+                            <th class="jugador1-col">${jugador1.nombre}</th>
+                            <th class="jugador2-col">${jugador2.nombre}</th>
+                            <th class="diferencia-col">Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        // ✅ AGREGAR FILAS DE ESTADÍSTICAS (OPTIMIZADO)
+        estadisticas.forEach((stat, index) => {
+            const valor1 = valores_jugador1[index];
+            const valor2 = valores_jugador2[index];
+            const diferencia = valor1 - valor2;
+            
+            const jugador1Mejor = valor1 > valor2;
+            const jugador2Mejor = valor2 > valor1;
+            
+            const clase1 = jugador1Mejor ? 'mejor-valor jugador1-col' : 'jugador1-col';
+            const clase2 = jugador2Mejor ? 'mejor-valor jugador2-col' : 'jugador2-col';
+            
+            let claseDiferencia = 'diferencia neutra';
+            let simboloDiferencia = '';
+            if (diferencia > 0) {
+                claseDiferencia = 'diferencia positiva';
+                simboloDiferencia = '+';
+            } else if (diferencia < 0) {
+                claseDiferencia = 'diferencia negativa';
+                simboloDiferencia = '';
+            }
+
+            html += `
+                <tr>
+                    <td class="stat-name">${stat.nombre}</td>
+                    <td class="${clase1}">
+                        <div class="stat-value">
+                            <div class="valor-principal">${valor1.toFixed(2)}</div>
+                        </div>
+                    </td>
+                    <td class="${clase2}">
+                        <div class="stat-value">
+                            <div class="valor-principal">${valor2.toFixed(2)}</div>
+                        </div>
+                    </td>
+                    <td class="${claseDiferencia}">
+                        ${simboloDiferencia}${diferencia.toFixed(2)}
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+    console.log('✅ Tabla completa de estadísticas de jugadores renderizada (OPTIMIZADA)');
+}
