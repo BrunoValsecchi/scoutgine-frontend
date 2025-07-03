@@ -223,16 +223,7 @@
         }
 
         function navegarAEquipo(equipoId, equipoNombre) {
-            // Actualizar datos globales
-            window.equipoData.equipoId = equipoId;
-            window.equipoData.equipoNombre = equipoNombre;
-            
-            // Actualizar URL sin recargar página
-            const newUrl = `${window.location.pathname}?id=${equipoId}`;
-            window.history.pushState({equipoId}, '', newUrl);
-            
-            // Cargar detalle del equipo
-            cargarEquipoDetalle(equipoId);
+            window.location.href = `equipo_detalle.html?id=${equipoId}`;
         }
 
         async function cargarEquipoDetalle(equipoId) {

@@ -13,14 +13,13 @@
       href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
       rel="stylesheet"
     />
-
-    <!-- ✅ CSS CON RUTAS ABSOLUTAS -->
-    <link rel="stylesheet" href="/static/myapp/css/style.css" />
+    
     <link rel="stylesheet" href="/static/myapp/css/menu.css" />
-    <link rel="stylesheet" href="/static/myapp/css/topnav.css" />
-    <link rel="stylesheet" href="/static/myapp/css/equipo_detalle.css" />
-    <link rel="stylesheet" href="/static/myapp/css/plantilla.css" />
-    <link rel="stylesheet" href="/static/myapp/css/equipo_stats.css" />
+    <link rel="stylesheet" href="static/myapp/css/topnav.css" />
+    <link rel="stylesheet" href="static/myapp/css/equipo_detalle.css" />
+    <link rel="stylesheet" href="static/myapp/css/equipo_stats.css" />
+    <link rel="stylesheet" href="static/myapp/css/plantilla.css" />
+
 </head>
 <body>
     <!-- Header Container -->
@@ -65,10 +64,10 @@
     </main>
 
     <!-- ✅ SCRIPTS EN EL ORDEN CORRECTO -->
-    <script src="/static/myapp/js/menu.js"></script>
-    <script src="/static/myapp/js/topnav.js"></script>
-    <script src="/static/myapp/js/config.js"></script>
-    <script src="/static/myapp/js/equipo_detalle.js"></script>
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/equipo_detalle.js"></script>
+    <script src="static/myapp/js/topnav.js"></script>
 
     <!-- ✅ SCRIPT PARA CARGAR HEADER INMEDIATAMENTE -->
     <script>
@@ -591,7 +590,7 @@ function renderInfoEquipo(data) {
     if (!stats || Object.keys(stats).length === 0) {
         contentEl.innerHTML = `
             <div class="equipo-stats-empty-simple">
-                <i class="bx bx-info-circle" style="font-size: 3rem; color: #6c7a89; margin-bottom: 15px;"></i>
+                <i class="bx bx-info-circle"></i>
                 <h3>Sin estadísticas</h3>
                 <p>No hay estadísticas disponibles para este equipo.</p>
             </div>

@@ -110,55 +110,49 @@
 
     <!-- COMPARACIÓN DE JUGADORES -->
     <div class="comparacion-container" id="jugadores-comparacion-container" style="display: none;">
-        <h2>Comparar Jugadores</h2>
-        
-        <!-- ✅ CONTROLES SUPERIORES PARA JUGADORES -->
+        <!-- ✅ FILTROS SUPERIORES (SIEMPRE VISIBLES CUANDO ESTÁ EN MODO JUGADORES) -->
         <div class="controles-superiores-jugadores">
-            <!-- ✅ SELECTOR DE GRUPO Y POSICIÓN -->
-            <div class="controles-filtros">
-                <div class="grupo-select-container">
-                    <label for="grupo-select-jugadores">Grupo de estadísticas:</label>
-                    <select name="grupo" id="grupo-select-jugadores" required>
-                        <option value="">Selecciona grupo</option>
-                        <!-- Se llena dinámicamente -->
-                    </select>
-                </div>
-                
-                <div class="posicion-select-container">
-                    <label for="posicion-select-jugadores">Posición:</label>
-                    <select name="posicion" id="posicion-select-jugadores">
-                        <option value="">Todas las posiciones</option>
-                        <option value="GK">Arquero (GK)</option>
-                        <option value="RB">Lateral Derecho (RB)</option>
-                        <option value="CB">Defensor Central (CB)</option>
-                        <option value="LB">Lateral Izquierdo (LB)</option>
-                        <option value="Defender">Defensor</option>
-                        <option value="DM">Mediocampista Defensivo (DM)</option>
-                        <option value="CM">Mediocampista Central (CM)</option>
-                        <option value="RM">Mediocampista Derecho (RM)</option>
-                        <option value="LM">Mediocampista Izquierdo (LM)</option>
-                        <option value="AM">Mediocampista Ofensivo (AM)</option>
-                        <option value="Midfielder">Mediocampista</option>
-                        <option value="RW">Extremo Derecho (RW)</option>
-                        <option value="LW">Extremo Izquierdo (LW)</option>
-                        <option value="ST">Delantero (ST)</option>
-                        <option value="Attacker">Delantero</option>
-                    </select>
-                </div>
+            <div class="filtros-posicion">
+                <label for="posicion-filter">Filtrar por Posición</label>
+                <select id="posicion-filter">
+                    <option value="">Todas las posiciones</option>
+                    <option value="GK">Portero (GK)</option>
+                    <option value="CB">Central (CB)</option>
+                    <option value="LB">Lateral Izq (LB)</option>
+                    <option value="RB">Lateral Der (RB)</option>
+                    <option value="DM">Mediocentro Def (DM)</option>
+                    <option value="CM">Mediocentro (CM)</option>
+                    <option value="LM">Medio Izq (LM)</option>
+                    <option value="RM">Medio Der (RM)</option>
+                    <option value="AM">Mediocentro Of (AM)</option>
+                    <option value="LW">Extremo Izq (LW)</option>
+                    <option value="RW">Extremo Der (RW)</option>
+                    <option value="ST">Delantero (ST)</option>
+                </select>
             </div>
             
             <!-- ✅ BOTONES DE MODO -->
             <div class="botones-modo">
-                <button type="button" id="btn-graficos-jugadores" class="modo-btn modo-activo">
-                    <i class="bx bx-bar-chart-alt-2"></i> Gráficos
+                <button id="btn-graficos-jugadores" class="modo-btn modo-activo">
+                    <i class="bx bx-line-chart"></i>
+                    Gráficos
                 </button>
-                <button type="button" id="btn-estadisticas-jugadores" class="modo-btn">
-                    <i class="bx bx-table"></i> Estadísticas
+                <button id="btn-estadisticas-jugadores" class="modo-btn">
+                    <i class="bx bx-table"></i>
+                    Estadísticas
                 </button>
+            </div>
+            
+            <!-- ✅ SELECTOR DE GRUPO (SOLO PARA GRÁFICOS) -->
+            <div class="grupo-select-container">
+                <label for="grupo-select-jugadores">Grupo de estadísticas</label>
+                <select id="grupo-select-jugadores">
+                    <!-- Se llena dinámicamente -->
+                </select>
             </div>
         </div>
 
-        <!-- ✅ AGREGAR SELECTORES DE JUGADORES -->
+        <!-- ✅ SELECTORES DE JUGADORES -->
         <div class="comparacion-flex">
             <!-- SELECTOR JUGADOR 1 -->
             <div class="jugador-selector">
@@ -219,32 +213,9 @@
     </div>
 
     <!-- Scripts -->
+
     <script src="/static/myapp/js/config.js"></script>
     <script src="/static/myapp/js/header.js"></script>
-    <script src="/static/myapp/js/comparacion.js"></script>
-
-    <script>
-        // ✅ SCRIPT MÍNIMO PARA HEADER
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('⚖️ Página de comparación cargada');
-            
-            const headerContainer = document.getElementById('header-container');
-            if (headerContainer) {
-                headerContainer.innerHTML = `
-                    <div class="header">
-                        <div class="page-header">
-                            <div class="page-icon-container">
-                                <i class="bx bx-football page-icon"></i>
-                            </div>
-                            <div class="page-info">
-                                <h1 class="page-title">Comparación</h1>
-                                <p class="page-subtitle">/ Equipos y Jugadores</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-    </script>
+    <script src="static/myapp/js/comparacion.js"></script>
 </body>
 </html>

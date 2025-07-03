@@ -57,20 +57,19 @@ body {
 .equipo-selector {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
+    gap: 20px;
     background: #1a202c;
     border: 2px solid #2d3748;
     border-radius: 15px;
-    padding: 2rem 1.5rem;
-    min-width: 220px;
+    padding: 25px 20px;
+    min-width: 250px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
 }
 
 .equipo-selector:hover {
     border-color: #00d4ff;
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
@@ -117,17 +116,18 @@ body {
     box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
 }
 
-/* ✅ CONTROLES SUPERIORES PARA EQUIPOS (IGUAL QUE JUGADORES) */
+/* ✅ CONTROLES SUPERIORES PARA EQUIPOS (IDÉNTICO A JUGADORES) */
 .controles-superiores-equipos {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    border-radius: 15px;
-    padding: 20px 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(0, 212, 255, 0.2);
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(35, 36, 58, 0.8);
+    border-radius: 8px;
+    border: 1px solid #00d4ff;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 /* ✅ CONTROLES SUPERIORES PARA JUGADORES (MANTENIDO) */
@@ -135,12 +135,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    border-radius: 15px;
-    padding: 20px 25px;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(0, 212, 255, 0.2);
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(35, 36, 58, 0.8);
+    border-radius: 8px;
+    border: 1px solid #00d4ff;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .controles-filtros {
@@ -1024,9 +1025,295 @@ body {
 /* ✅ ESTILOS ADICIONALES PARA INFO DE EQUIPOS */
 .info-equipos {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.equipo-info {
+    flex: 1;
+    text-align: center;
+}
+
+.nombre-equipo {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #00d4ff;
+    margin-bottom: 0.5rem;
+}
+
+.liga-equipo {
+    font-size: 1rem;
+    color: #a0aec0;
+    margin-bottom: 0.3rem;
+}
+
+.nombre-corto {
+    font-size: 0.9rem;
+    color: #718096;
+    font-style: italic;
+}
+
+/* ✅ ESTILOS PARA COLUMNAS DE EQUIPOS EN TABLA */
+.equipo1-col {
+    background: rgba(0, 212, 255, 0.1);
+    text-align: center;
+    font-weight: 600;
+}
+
+.equipo2-col {
+    background: rgba(255, 215, 0, 0.1);
+    text-align: center;
+    font-weight: 600;
+}
+
+/* ✅ ESTILOS PARA MENSAJE DE ERROR */
+.error-message {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #2d1b1b, #3d2222);
+    border-radius: 12px;
+    border: 2px solid #e53e3e;
+    color: #white;
+}
+
+.error-message i {
+    font-size: 3rem;
+    color: #e53e3e;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.error-message h4 {
+    color: #e53e3e;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.retry-btn {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+.retry-btn:hover {
+    background: linear-gradient(135deg, #c53030, #9c2323);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+}
+
+/* ✅ CONTROLES SUPERIORES PARA EQUIPOS (IDÉNTICO A JUGADORES) */
+.controles-superiores-equipos {
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(35, 36, 58, 0.8);
+    border-radius: 8px;
+    border: 1px solid #00d4ff;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* ✅ SELECTORES DE EQUIPOS MEJORADOS (IGUAL QUE JUGADORES) */
+.equipo-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #1a202c;
+    border: 2px solid #2d3748;
+    border-radius: 15px;
+    padding: 25px 20px;
+    min-width: 250px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+.equipo-selector:hover {
+    border-color: #00d4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ✅ FILTROS DE EQUIPO (ESTILO IGUAL A FILTROS DE JUGADOR) */
+.filtros-equipo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filtros-equipo label {
+    color: #00d4ff;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.filtros-equipo select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid #2d3748;
+    font-size: 14px;
+    background: #0f1419;
+    color: #e2e8f0;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.filtros-equipo select:focus {
+    border-color: #00d4ff;
+    background: #1a202c;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+/* ✅ SELECTOR DE EQUIPO ESPECÍFICO (IGUAL A SELECTOR DE JUGADOR) */
+.selector-equipo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.selector-equipo label {
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    text-align: center;
+}
+
+.selector-equipo select {
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 2px solid #2d3748;
+    font-size: 15px;
+    background: #0f1419;
+    color: #e2e8f0;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.selector-equipo select:focus {
+    border-color: #ffd700;
+    background: #1a202c;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.selector-equipo select:disabled {
+    background: #0a0e13;
+    color: #4a5568;
+    cursor: not-allowed;
+    border-color: #1a202c;
+}
+
+/* ✅ EFECTOS ESPECIALES PARA SELECTS ACTIVOS (IGUAL QUE JUGADORES) */
+.filtros-equipo select:not(:disabled):hover,
+.selector-equipo select:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ INDICADORES VISUALES PARA EQUIPOS (IGUAL QUE JUGADORES) */
+.equipo-selector:nth-child(1) {
+    border-left: 4px solid #00d4ff;
+}
+
+.equipo-selector:nth-child(3) {
+    border-left: 4px solid #ffd700;
+}
+
+.equipo-selector:nth-child(1) .selector-equipo label {
+    color: #00d4ff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.equipo-selector:nth-child(3) .selector-equipo label {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.equipo-selector:nth-child(1) .selector-equipo select:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.equipo-selector:nth-child(3) .selector-equipo select:focus {
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+/* ✅ ESTILOS PARA BOTONES DE MODO EQUIPOS (IDÉNTICO A JUGADORES) */
+.controles-superiores-equipos .modo-btn {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: #e2e8f0;
+    border: 2px solid #2d3748;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.controles-superiores-equipos .modo-btn:hover {
+    border-color: #00d4ff;
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #00d4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+}
+
+.controles-superiores-equipos .modo-btn.modo-activo {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+    color: #0f1419;
+    border-color: #00d4ff;
+    font-weight: 700;
+    box-shadow: 
+        0 0 20px rgba(0, 212, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.controles-superiores-equipos .modo-btn.modo-activo:hover {
+    background: linear-gradient(135deg, #0099cc 0%, #007acc 100%);
+    transform: translateY(-1px);
+}
+
+/* ✅ CONTENEDOR DE BOTONES DE MODO EQUIPOS */
+.controles-superiores-equipos .botones-modo {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* ✅ ESTILOS ESPECÍFICOS PARA INFORMACIÓN DE EQUIPOS (IGUAL QUE JUGADORES) */
+.info-equipos {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
     padding: 20px;
     background: rgba(26, 32, 44, 0.4);
     border-radius: 12px;
@@ -1072,52 +1359,205 @@ body {
     opacity: 0.9;
 }
 
-.edad-pais {
+.nombre-corto {
     color: #a0aec0;
     font-weight: 500;
     font-size: 12px;
-    margin-top: 5px;
+    background: rgba(160, 174, 192, 0.1);
+    padding: 3px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(160, 174, 192, 0.2);
 }
 
-/* ✅ COLUMNA DE DIFERENCIAS */
-.diferencia-col {
-    color: #00d4ff !important;
-    font-weight: 700 !important;
-    min-width: 120px;
+/* ✅ COLUMNAS ESPECÍFICAS PARA EQUIPOS (IGUAL QUE JUGADORES) */
+.equipo-col {
+    position: relative;
 }
 
-/* ✅ LOADING Y ERROR PARA ESTADÍSTICAS */
-.loading-chart, .error-chart {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
+.equipo1-col {
+    border-left: 3px solid #00d4ff !important;
+    background: rgba(0, 212, 255, 0.05) !important;
     text-align: center;
-    color: #a0aec0;
-    font-size: 18px;
-    background: linear-gradient(135deg, #181f2a 0%, #1a202c 100%);
-    border-radius: 15px;
-    border: 2px dashed rgba(160, 174, 192, 0.3);
-    font-family: 'Orbitron', sans-serif;
-    gap: 15px;
+    font-weight: 600;
 }
 
-.error-chart {
-    border-color: rgba(245, 101, 101, 0.3);
-    color: #f56565;
+.equipo2-col {
+    border-left: 3px solid #ffd700 !important;
+    background: rgba(255, 215, 0, 0.05) !important;
+    text-align: center;
+    font-weight: 600;
 }
 
-.loading-chart i, .error-chart i {
-    font-size: 48px;
-    margin-bottom: 10px;
+/* ✅ EFECTOS HOVER ESPECÍFICOS PARA EQUIPOS */
+.stats-table tr:hover .equipo1-col {
+    background: rgba(0, 212, 255, 0.15) !important;
+    border-left-color: #00d4ff !important;
+    box-shadow: inset 3px 0 0 #00d4ff, 0 0 10px rgba(0, 212, 255, 0.2);
 }
 
-.loading-chart i {
-    animation: spin 1s linear infinite;
+.stats-table tr:hover .equipo2-col {
+    background: rgba(255, 215, 0, 0.15) !important;
+    border-left-color: #ffd700 !important;
+    box-shadow: inset 3px 0 0 #ffd700, 0 0 10px rgba(255, 215, 0, 0.2);
 }
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+/* ✅ MEJORES VALORES PARA EQUIPOS */
+.equipo1-col.mejor-valor {
+    background: linear-gradient(135deg, 
+        rgba(0, 212, 255, 0.25) 0%, 
+        rgba(0, 212, 255, 0.15) 50%, 
+        rgba(0, 212, 255, 0.25) 100%) !important;
+    border-left: 4px solid #00d4ff !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.equipo2-col.mejor-valor {
+    background: linear-gradient(135deg, 
+        rgba(255, 215, 0, 0.25) 0%, 
+        rgba(255, 215, 0, 0.15) 50%, 
+        rgba(255, 215, 0, 0.25) 100%) !important;
+    border-left: 4px solid #ffd700 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.equipo1-col.mejor-valor .valor-principal {
+    color: #00d4ff !important;
+    text-shadow: 0 0 5px rgba(0, 212, 255, 0.6);
+    font-weight: 800;
+}
+
+.equipo2-col.mejor-valor .valor-principal {
+    color: #ffd700 !important;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.6);
+    font-weight: 800;
+}
+
+/* ✅ ANIMACIÓN ESPECÍFICA PARA MEJOR VALOR DE EQUIPOS */
+.equipo1-col.mejor-valor {
+    animation: pulse-glow-equipo1 3s ease-in-out infinite;
+}
+
+.equipo2-col.mejor-valor {
+    animation: pulse-glow-equipo2 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-equipo1 {
+    0%, 100% {
+        box-shadow: 
+            inset 4px 0 0 #00d4ff,
+            0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    50% {
+        box-shadow: 
+            inset 4px 0 0 #00d4ff,
+            0 0 20px rgba(0, 212, 255, 0.6);
+    }
+}
+
+@keyframes pulse-glow-equipo2 {
+    0%, 100% {
+        box-shadow: 
+            inset 4px 0 0 #ffd700,
+            0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 
+            inset 4px 0 0 #ffd700,
+            0 0 20px rgba(255, 215, 0, 0.6);
+    }
+}
+
+/* ✅ EFECTOS ESPECIALES PARA CABECERAS DE EQUIPOS */
+.stats-table th.equipo1-col::after {
+    background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+}
+
+.stats-table th.equipo2-col::after {
+    background: linear-gradient(90deg, transparent, #ffd700, transparent);
+}
+
+/* ✅ RESPONSIVE PARA EQUIPOS (IGUAL QUE JUGADORES) */
+@media (max-width: 1200px) {
+    .controles-superiores-equipos {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .controles-filtros {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+    
+    .grupo-select-container,
+    .posicion-select-container {
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .equipo-selector {
+        min-width: 200px;
+        padding: 20px 15px;
+    }
+    
+    .controles-filtros {
+        gap: 10px;
+    }
+    
+    .grupo-select-container,
+    .posicion-select-container {
+        min-width: 100%;
+    }
+    
+    .controles-superiores-equipos {
+        padding: 15px 20px;
+    }
+    
+    .botones-modo {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .info-equipos {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .equipo1-info,
+    .equipo2-info {
+        border: none;
+        border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+        padding-bottom: 10px;
+        flex: none;
+        width: 100%;
+    }
+    
+    .equipo2-info {
+        border-bottom-color: rgba(255, 215, 0, 0.3);
+    }
+    
+    .vs-separator {
+        font-size: 20px;
+        padding: 10px 0;
+    }
+    
+    .nombre-equipo {
+        font-size: 14px;
+    }
+    
+    .liga-equipo {
+        font-size: 12px;
+    }
+    
+    .nombre-corto {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
 }

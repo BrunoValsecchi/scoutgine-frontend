@@ -649,4 +649,3 @@ window.cargarStatsEquipos = cargarStatsEquipos;
 window.cargarStatsJugadores = cargarStatsJugadores;
 
 console.log("✅ LIGAS.JS INICIALIZADO");
-

@@ -81,28 +81,6 @@ function getCurrentPage() {
 // ✅ CONFIGURACIONES DE TOPNAV POR PÁGINA
 function getTopNavForPage(pageName) {
     const configs = {
-        'ligas': `
-            <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar equipos..." class="topnav-search-input">
-                </div>
-                <div class="top-nav-actions">
-                    <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
-                    <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipo</a>
-                    <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Stats Jugadores</a>
-                </div>
-            </div>
-        `,
-        
-        'equipo': `
-            <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar equipos..." class="topnav-search-input">
-                </div>
-                
-            </div>
-        `,
-        
         'comparacion': `
             <div class="topnav-content">
                 <div class="topnav-searchbar">
@@ -176,7 +154,15 @@ function handleNavButton(button) {
     
     console.log(`🖱️ Botón clickeado: ${buttonId} en página: ${currentPage}`);
     
-    // Despachar evento personalizado
+    // ✅ HANDLER ESPECÍFICO PARA COMPARACION
+    if (currentPage === 'comparacion') {
+        const comparacionEvent = new CustomEvent('comparacionNavAction', {
+            detail: { action: buttonId }
+        });
+        document.dispatchEvent(comparacionEvent);
+    }
+    
+    // Evento genérico
     const event = new CustomEvent('navButtonClick', {
         detail: { page: currentPage, button: buttonId }
     });

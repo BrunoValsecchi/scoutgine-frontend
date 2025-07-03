@@ -40,12 +40,19 @@ function getCsrfToken() {
     return '';
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando comparación...');
+    
+    // ✅ NO ESPERAR TOPNAV - header.js se encarga
+    inicializarComparacion();
+});
+
+function inicializarComparacion() {
     console.log('🚀 Inicializando comparación...');
     
     try {
         // ✅ CARGAR DATOS INICIALES
-        await cargarDatosComparacion();
+        cargarDatosComparacion();
         
         // ✅ CONFIGURAR NAVEGACIÓN
         setupNavegacion();
@@ -62,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.error('❌ Error inicializando comparación:', error);
         mostrarError('Error cargando la página de comparación');
     }
-});
+}
 
 // ✅ FUNCIÓN PARA CARGAR DATOS
 async function cargarDatosComparacion() {
@@ -163,16 +170,26 @@ function llenarSelectores() {
     }
 }
 
-// ✅ FUNCIÓN PARA CONFIGURAR NAVEGACIÓN
+// ✅ FUNCIÓN PARA CONFIGURAR NAVEGACIÓN (SIMPLIFICADA)
 function setupNavegacion() {
-    // Escuchar eventos de navegación del header
-    document.addEventListener('navButtonClick', function(e) {
-        const { page, button } = e.detail;
-        if (page === 'comparacion') {
-            handleComparacionNavigation(button);
+    console.log('🔧 Configurando navegación de comparación...');
+    
+    // ✅ SOLO ESCUCHAR EL EVENTO DE HEADER.JS
+    document.addEventListener('comparacionNavAction', function(e) {
+        console.log('🎯 Evento comparacionNavAction recibido:', e.detail);
+        const { action } = e.detail;
+        
+        if (action === 'btn-equipos') {
+            console.log('📊 Cambiando a vista de equipos');
+            showEquiposComparacion();
+        } else if (action === 'btn-jugadores') {
+            console.log('👥 Cambiando a vista de jugadores');
+            showJugadoresComparacion();
         }
     });
 }
+
+// ✅ RESTO DE TU CÓDIGO IGUAL...
 
 function handleComparacionNavigation(buttonId) {
     switch(buttonId) {
@@ -186,6 +203,8 @@ function handleComparacionNavigation(buttonId) {
 }
 
 function showEquiposComparacion() {
+    console.log('📊 EJECUTANDO showEquiposComparacion');
+    
     // ✅ LIMPIAR GRÁFICO DE JUGADORES ANTES DE OCULTAR
     if (window.currentJugadoresChart) {
         try {
@@ -196,31 +215,76 @@ function showEquiposComparacion() {
         }
     }
 
-    document.getElementById('equipos-comparacion-container').style.display = 'block';
-    document.getElementById('jugadores-comparacion-container').style.display = 'none';
+    const equiposContainer = document.getElementById('equipos-comparacion-container');
+    const jugadoresContainer = document.getElementById('jugadores-comparacion-container');
+    const loadingContainer = document.getElementById('loading-comparacion');
+    
+    console.log('🔍 Contenedores encontrados:', {
+        equipos: !!equiposContainer,
+        jugadores: !!jugadoresContainer,
+        loading: !!loadingContainer
+    });
+    
+    if (equiposContainer) equiposContainer.style.display = 'block';
+    if (jugadoresContainer) jugadoresContainer.style.display = 'none';
+    if (loadingContainer) loadingContainer.style.display = 'none';
+    
     window.comparacionData.currentMode = 'equipos';
-    console.log('📊 Modo: Comparación de equipos');
+    console.log('✅ Modo cambiado a equipos');
 }
 
 function showJugadoresComparacion() {
+    console.log('👥 EJECUTANDO showJugadoresComparacion');
+    
     // ✅ LIMPIAR GRÁFICO DE EQUIPOS ANTES DE OCULTAR
     if (window.currentEquiposChart) {
         try {
             window.currentEquiposChart.dispose();
             window.currentEquiposChart = null;
         } catch (e) {
-            console.warn('⚠️ Error limpiando gráfico de equipos:', e);
+            console.warn('⚠️ Error destruyendo gráfico de equipos:', e);
         }
     }
 
-    document.getElementById('equipos-comparacion-container').style.display = 'none';
-    document.getElementById('jugadores-comparacion-container').style.display = 'block';
+    const equiposContainer = document.getElementById('equipos-comparacion-container');
+    const jugadoresContainer = document.getElementById('jugadores-comparacion-container');
+    const loadingContainer = document.getElementById('loading-comparacion');
+    
+    console.log('🔍 Contenedores encontrados:', {
+        equipos: !!equiposContainer,
+        jugadores: !!jugadoresContainer,
+        loading: !!loadingContainer
+    });
+    
+    if (equiposContainer) equiposContainer.style.display = 'none';
+    if (jugadoresContainer) jugadoresContainer.style.display = 'block';
+    if (loadingContainer) loadingContainer.style.display = 'none';
+    
     window.comparacionData.currentMode = 'jugadores';
-    console.log('👥 Modo: Comparación de jugadores');
+    console.log('✅ Modo cambiado a jugadores');
 }
 
-// ✅ FUNCIÓN PARA CONFIGURAR EVENT LISTENERS
+// ✅ FUNCIÓN PARA CONFIGURAR EVENT LISTENERS (ACTUALIZADA)
 function setupEventListeners() {
+    // ✅ FILTRO DE POSICIÓN
+    const posicionFilter = document.getElementById('posicion-filter');
+    if (posicionFilter) {
+        posicionFilter.addEventListener('change', function() {
+            console.log('🔄 Filtro de posición cambiado a:', this.value);
+            
+            // ✅ RECARGAR JUGADORES DE AMBOS EQUIPOS CON EL NUEVO FILTRO
+            const equipo1Id = document.getElementById('equipo-jugador1-select')?.value;
+            const equipo2Id = document.getElementById('equipo-jugador2-select')?.value;
+            
+            if (equipo1Id) {
+                cargarJugadoresEquipo(equipo1Id, 'jugador1-select');
+            }
+            if (equipo2Id) {
+                cargarJugadoresEquipo(equipo2Id, 'jugador2-select');
+            }
+        });
+    }
+    
     // ✅ EQUIPOS
     const equipo1Select = document.getElementById('equipo1-select');
     const equipo2Select = document.getElementById('equipo2-select');
@@ -286,10 +350,15 @@ function setupEventListeners() {
     }
 }
 
-// ✅ FUNCIÓN PARA CARGAR JUGADORES DE UN EQUIPO
+// ✅ FUNCIÓN MEJORADA PARA CARGAR JUGADORES CON FILTRO DE POSICIÓN
 async function cargarJugadoresEquipo(equipoId, selectId) {
+    console.log(`🔄 Cargando jugadores para equipo ${equipoId} en selector ${selectId}`);
+    
     const select = document.getElementById(selectId);
-    if (!select) return;
+    if (!select) {
+        console.error(`❌ Selector ${selectId} no encontrado`);
+        return;
+    }
     
     select.innerHTML = '<option value="">Cargando jugadores...</option>';
     select.disabled = true;
@@ -302,16 +371,44 @@ async function cargarJugadoresEquipo(equipoId, selectId) {
     try {
         const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/equipo/${equipoId}/jugadores/`);
         const data = await response.json();
+        console.log(`✅ Jugadores recibidos para equipo ${equipoId}:`, data);
 
         select.innerHTML = '<option value="">Selecciona jugador</option>';
         
         if (data.jugadores && data.jugadores.length > 0) {
-            data.jugadores.forEach(jugador => {
-                const option = document.createElement('option');
-                option.value = jugador.id;
-                option.textContent = `${jugador.nombre} (${jugador.posicion || 'POS'})`;
-                select.appendChild(option);
-            });
+            // ✅ OBTENER POSICIÓN FILTRADA
+            const posicionFilter = document.getElementById('posicion-filter');
+            const posicionFiltro = posicionFilter?.value;
+            
+            console.log(`🎯 Filtro de posición actual: "${posicionFiltro}"`);
+            console.log(`📋 Total jugadores antes de filtrar: ${data.jugadores.length}`);
+            
+            // ✅ FILTRAR POR POSICIÓN SI ESTÁ SELECCIONADA
+            let jugadoresFiltrados = data.jugadores;
+            if (posicionFiltro) {
+                jugadoresFiltrados = data.jugadores.filter(jugador => {
+                    const posicionJugador = (jugador.posicion || '').toUpperCase();
+                    const coincide = posicionJugador.includes(posicionFiltro.toUpperCase());
+                    console.log(`🔍 ${jugador.nombre} - Posición: "${jugador.posicion}" - Coincide: ${coincide}`);
+                    return coincide;
+                });
+            }
+            
+            console.log(`📋 Jugadores después de filtrar: ${jugadoresFiltrados.length}`);
+            
+            if (jugadoresFiltrados.length > 0) {
+                jugadoresFiltrados.forEach(jugador => {
+                    const option = document.createElement('option');
+                    option.value = jugador.id;
+                    option.textContent = `${jugador.nombre} (${jugador.posicion || 'POS'})`;
+                    select.appendChild(option);
+                });
+            } else {
+                const mensajeFiltro = posicionFiltro ? 
+                    `No hay jugadores con posición ${posicionFiltro} en este equipo` : 
+                    'No hay jugadores disponibles';
+                select.innerHTML = `<option value="">${mensajeFiltro}</option>`;
+            }
         } else {
             select.innerHTML = '<option value="">No hay jugadores disponibles</option>';
         }
@@ -319,7 +416,7 @@ async function cargarJugadoresEquipo(equipoId, selectId) {
         select.disabled = false;
         
     } catch (error) {
-        console.error('Error cargando jugadores:', error);
+        console.error('❌ Error cargando jugadores:', error);
         select.innerHTML = '<option value="">Error cargando jugadores</option>';
         select.disabled = false;
     }
@@ -385,7 +482,7 @@ async function compararEquipos() {
     }
 }
 
-// ✅ FUNCIÓN PARA COMPARAR JUGADORES (MEJORADA)
+// ✅ FUNCIÓN PARA COMPARAR JUGADORES (CON DEBUGGING MEJORADO)
 async function compararJugadores() {
     const jugador1Id = document.getElementById('jugador1-select')?.value;
     const jugador2Id = document.getElementById('jugador2-select')?.value;
@@ -424,29 +521,170 @@ async function compararJugadores() {
         });
 
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            // ✅ MANEJAR ERRORES DE ESTADÍSTICAS FALTANTES
+            let errorDetails;
+            try {
+                errorDetails = await response.json();
+                console.log('📋 Error details:', errorDetails);
+                
+                // ✅ DETECTAR ERROR DE MINUTOS INSUFICIENTES
+                if (errorDetails.error && 
+                    (errorDetails.error.includes('No hay estadísticas disponibles') || 
+                     errorDetails.error.includes('no completó los 300 minutos'))) {
+                    
+                    // ✅ EXTRAER NOMBRES DE JUGADORES DEL ERROR
+                    const errorText = typeof errorDetails.error === 'string' ? 
+                                    errorDetails.error : 
+                                    errorDetails.error.message || JSON.stringify(errorDetails.error);
+                    
+                    // ✅ OBTENER NOMBRES DE LOS JUGADORES SELECCIONADOS
+                    const jugador1Nombre = document.getElementById('jugador1-select')?.selectedOptions[0]?.text || 'Jugador 1';
+                    const jugador2Nombre = document.getElementById('jugador2-select')?.selectedOptions[0]?.text || 'Jugador 2';
+                    
+                    if (chartContainer) {
+                        chartContainer.innerHTML = `
+                            <div class="insufficient-stats-message">
+                                <div class="stats-warning-icon">
+                                    <i class="bx bx-time-five"></i>
+                                </div>
+                                <h4>⏱️ Minutos Insuficientes</h4>
+                                <div class="players-without-stats">
+                                    <p><strong>${jugador1Nombre}</strong> y/o <strong>${jugador2Nombre}</strong> no completaron los <strong>300 minutos mínimos</strong> requeridos para generar estadísticas detalladas.</p>
+                                </div>
+                                <div class="stats-explanation">
+                                    <p><i class="bx bx-info-circle"></i> Solo jugadores con suficiente tiempo de juego aparecen en las comparaciones gráficas.</p>
+                                </div>
+                                <div class="alternative-options">
+                                    <button onclick="toggleModoJugadores('estadisticas')" class="btn-alternative">
+                                        <i class="bx bx-table"></i> Ver Información Básica
+                                    </button>
+                                    <button onclick="mostrarJugadoresConEstadisticas()" class="btn-alternative">
+                                        <i class="bx bx-search"></i> Ver Jugadores Disponibles
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return;
+                }
+            } catch {
+                errorDetails = await response.text();
+            }
+            
+            throw new Error(`Error HTTP: ${response.status} - ${JSON.stringify(errorDetails)}`);
         }
 
         const data = await response.json();
-        console.log('✅ Datos de comparación jugadores:', data);
+        console.log('✅ Datos de comparación jugadores recibidos:', data);
 
         if (data.error) {
             throw new Error(data.error);
+        }
+
+        // ✅ VERIFICAR ESTRUCTURA DE DATOS
+        if (!data.estadisticas || !data.valores_jugador1 || !data.valores_jugador2) {
+            console.error('❌ Estructura de datos incompleta:', data);
+            throw new Error('Datos de respuesta incompletos');
         }
 
         // ✅ RENDERIZAR GRÁFICO RADAR
         renderRadarJugadores(data);
 
     } catch (error) {
-        console.error('❌ Error comparando jugadores:', error);
+        console.error('❌ Error completo comparando jugadores:', error);
         if (chartContainer) {
-            chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
+            chartContainer.innerHTML = `
+                <div class="error-chart">
+                    <i class="bx bx-error-circle"></i>
+                    <h4>Error en la comparación</h4>
+                    <p>${error.message}</p>
+                </div>
+            `;
         }
     }
 }
 
-// ✅ FUNCIÓN PARA RENDERIZAR RADAR DE EQUIPOS (CORREGIDA)
+// ✅ FUNCIÓN PARA MOSTRAR JUGADORES CON ESTADÍSTICAS DISPONIBLES
+function mostrarJugadoresConEstadisticas() {
+    console.log('🔍 Mostrando jugadores con estadísticas disponibles...');
+    
+    // Cambiar a modo estadísticas donde se ven todos los jugadores
+    toggleModoJugadores('estadisticas');
+    
+    // Opcional: Mostrar un tooltip o mensaje informativo
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'temp-info-message';
+    infoDiv.innerHTML = `
+        <div class="info-message">
+            <i class="bx bx-info-circle"></i>
+            <span>Aquí puedes ver la información básica de todos los jugadores, incluso los que no tienen estadísticas completas.</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="close-info">×</button>
+        </div>
+    `;
+    
+    const estadisticasContainer = document.getElementById('estadisticas-comparacion-jugadores');
+    if (estadisticasContainer) {
+        estadisticasContainer.insertBefore(infoDiv, estadisticasContainer.firstChild);
+        
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (infoDiv.parentElement) {
+                infoDiv.remove();
+            }
+        }, 5000);
+    }
+}
+
+// ✅ FUNCIÓN PARA RENDERIZAR RADAR DE EQUIPOS (CON DEBUGGING)
 function renderRadarEquipos(data) {
+    console.log('🎨 Renderizando radar de equipos');
+    console.log('📊 Data recibida:', data);
+    
+    // ✅ VALIDAR ESTRUCTURA DE DATOS
+    if (!data) {
+        console.error('❌ No hay datos para renderizar');
+        return;
+    }
+    
+    if (!data.equipo1 || !data.equipo2) {
+        console.error('❌ Información de equipos faltante:', {
+            equipo1: data.equipo1,
+            equipo2: data.equipo2
+        });
+        
+        const chartContainer = document.getElementById('radar-comparacion-equipos');
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div class="error-chart">
+                    <i class="bx bx-error-circle"></i>
+                    <h4>Error de datos</h4>
+                    <p>Información de equipos incompleta</p>
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    if (!data.estadisticas || !data.valores_equipo1 || !data.valores_equipo2) {
+        console.error('❌ Estadísticas faltantes:', {
+            estadisticas: !!data.estadisticas,
+            valores_equipo1: !!data.valores_equipo1,
+            valores_equipo2: !!data.valores_equipo2
+        });
+        
+        const chartContainer = document.getElementById('radar-comparacion-equipos');
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div class="error-chart">
+                    <i class="bx bx-error-circle"></i>
+                    <h4>Datos incompletos</h4>
+                    <p>Faltan estadísticas para la comparación</p>
+                </div>
+            `;
+        }
+        return;
+    }
+
     const chartContainer = document.getElementById('radar-comparacion-equipos');
     if (!chartContainer) {
         console.error('❌ Contenedor del gráfico de equipos no encontrado');
@@ -474,9 +712,15 @@ function renderRadarEquipos(data) {
         try {
             // ✅ VERIFICAR QUE EL CONTENEDOR SIGUE EXISTIENDO
             if (!document.getElementById('radar-comparacion-equipos')) {
-                console.warn('⚠️ Contenedor eliminado durante el renderizado');
+                console.warn('⚠️ Contenedor removido del DOM durante el timeout');
                 return;
             }
+
+            console.log('✅ Creando gráfico con datos validados:', {
+                equipo1: data.equipo1.nombre,
+                equipo2: data.equipo2.nombre,
+                estadisticas: data.estadisticas.length
+            });
 
             // ✅ INICIALIZAR ECHARTS
             const chart = echarts.init(chartContainer, null, {
@@ -485,15 +729,26 @@ function renderRadarEquipos(data) {
 
             const option = {
                 backgroundColor: 'transparent',
+                // ✅ TOOLTIP MEJORADO PARA MOSTRAR PERCENTILES Y VALORES REALES
                 tooltip: {
                     trigger: 'item',
                     backgroundColor: '#1a1a2e',
                     borderColor: '#00d4ff',
                     textStyle: { color: '#fff' },
                     formatter: function(params) {
-                        const equipoNombre = params.name;
-                        const indicatorIndex = params.dataIndex;
-                        return generarTooltipEquipos(data, equipoNombre, indicatorIndex);
+                        const statName = data.estadisticas[params.dataIndex].nombre;
+                        const percentil = params.value;
+                        
+                        return `
+                            <div style="padding: 5px;">
+                                <strong>${params.seriesName}</strong><br/>
+                                <span style="color: #00d4ff;">${statName}</span><br/>
+                                📊 Percentil: ${percentil}
+                                <div style="font-size: 11px; color: #ccc; margin-top: 3px;">
+                                    (Mejor que ${percentil}% de ${params.seriesName.includes('Equipo') ? 'equipos' : 'jugadores'})
+                                </div>
+                            </div>
+                        `;
                     }
                 },
                 legend: {
@@ -513,8 +768,11 @@ function renderRadarEquipos(data) {
                             fontSize: 11
                         },
                         formatter: function(value) {
-                            if (value.length > 12) {
-                                return value.substring(0, 12) + '...';
+                            // Dividir nombres largos en múltiples líneas
+                            if (value.length > 15) {
+                                const words = value.split(' ');
+                                const mid = Math.ceil(words.length / 2);
+                                return words.slice(0, mid).join(' ') + '\n' + words.slice(mid).join(' ');
                             }
                             return value;
                         }
@@ -556,18 +814,18 @@ function renderRadarEquipos(data) {
             };
 
             chart.setOption(option, true);
-            console.log('✅ Gráfico de equipos renderizado');
+            console.log('✅ Gráfico de equipos renderizado correctamente');
 
             // ✅ GUARDAR REFERENCIA
             window.currentEquiposChart = chart;
 
             // ✅ EVENTO RESIZE CON PROTECCIÓN
             const resizeHandler = () => {
-                if (window.currentEquiposChart && document.getElementById('radar-comparacion-equipos')) {
+                if (window.currentEquiposChart && !window.currentEquiposChart.isDisposed()) {
                     try {
                         window.currentEquiposChart.resize();
                     } catch (e) {
-                        console.warn('⚠️ Error en resize del gráfico:', e);
+                        console.warn('⚠️ Error en resize de gráfico equipos:', e);
                     }
                 }
             };
@@ -583,7 +841,7 @@ function renderRadarEquipos(data) {
             console.error('❌ Error renderizando gráfico de equipos:', error);
             chartContainer.innerHTML = `<div class="error-chart">Error: ${error.message}</div>`;
         }
-    }, 150); // ✅ Aumentar timeout a 150ms
+    }, 150);
 }
 
 // ✅ FUNCIÓN PARA RENDERIZAR RADAR DE JUGADORES (CORREGIDA)
@@ -615,7 +873,7 @@ function renderRadarJugadores(data) {
         try {
             // ✅ VERIFICAR QUE EL CONTENEDOR SIGUE EXISTIENDO
             if (!document.getElementById('radar-comparacion-jugadores')) {
-                console.warn('⚠️ Contenedor eliminado durante el renderizado');
+                console.warn('⚠️ Contenedor removido durante el renderizado');
                 return;
             }
 
@@ -773,48 +1031,43 @@ function toggleModoEquipos(modo) {
     }
 }
 
-// ✅ FUNCIÓN PARA ALTERNAR MODO JUGADORES (ACTUALIZADA)
+// ✅ FUNCIÓN PARA ALTERNAR ENTRE GRÁFICOS Y ESTADÍSTICAS DE JUGADORES (ACTUALIZADA)
 function toggleModoJugadores(modo) {
-    console.log('🔄 Cambiando modo jugadores a:', modo);
+    console.log(`🔄 Cambiando modo de jugadores a: ${modo}`);
     
-    const btnGraficos = document.getElementById('btn-graficos-jugadores');
-    const btnEstadisticas = document.getElementById('btn-estadisticas-jugadores');
     const radarContainer = document.getElementById('radar-comparacion-jugadores');
     const estadisticasContainer = document.getElementById('estadisticas-comparacion-jugadores');
-    const grupoSelectContainer = document.querySelector('.controles-superiores-jugadores .grupo-select-container');
+    const btnGraficos = document.getElementById('btn-graficos-jugadores');
+    const btnEstadisticas = document.getElementById('btn-estadisticas-jugadores');
+    const grupoContainer = document.querySelector('#jugadores-comparacion-container .grupo-select-container');
+    
+    // ✅ RESETEAR CLASES
+    if (btnGraficos) btnGraficos.classList.remove('modo-activo');
+    if (btnEstadisticas) btnEstadisticas.classList.remove('modo-activo');
     
     if (modo === 'graficos') {
-        // ✅ ACTIVAR MODO GRÁFICOS
-        btnGraficos.classList.add('modo-activo');
-        btnEstadisticas.classList.remove('modo-activo');
-        
-        // ✅ MOSTRAR SELECTOR DE GRUPO
-        if (grupoSelectContainer) {
-            grupoSelectContainer.style.display = 'block';
-        }
-        
+        // ✅ MOSTRAR GRÁFICOS
         if (radarContainer) radarContainer.style.display = 'block';
         if (estadisticasContainer) estadisticasContainer.style.display = 'none';
+        if (btnGraficos) btnGraficos.classList.add('modo-activo');
+        if (grupoContainer) grupoContainer.style.display = 'block';
         
-        // ✅ RECOMPARAR JUGADORES PARA MOSTRAR GRÁFICO
+        // ✅ ACTUALIZAR GRÁFICO SI HAY JUGADORES SELECCIONADOS
         compararJugadores();
         
     } else if (modo === 'estadisticas') {
-        // ✅ ACTIVAR MODO ESTADÍSTICAS
-        btnGraficos.classList.remove('modo-activo');
-        btnEstadisticas.classList.add('modo-activo');
-        
-        // ✅ OCULTAR SELECTOR DE GRUPO
-        if (grupoSelectContainer) {
-            grupoSelectContainer.style.display = 'none';
-        }
-        
+        // ✅ MOSTRAR ESTADÍSTICAS COMPLETAS
         if (radarContainer) radarContainer.style.display = 'none';
         if (estadisticasContainer) estadisticasContainer.style.display = 'block';
+        if (btnEstadisticas) btnEstadisticas.classList.add('modo-activo');
+        if (grupoContainer) grupoContainer.style.display = 'none';
         
-        // ✅ MOSTRAR TODAS LAS ESTADÍSTICAS
+        // ✅ CARGAR TODAS LAS ESTADÍSTICAS
         mostrarTodasEstadisticasJugadores();
     }
+    
+    window.comparacionData.modoJugadores = modo;
+    console.log(`✅ Modo de jugadores cambiado a: ${modo}`);
 }
 
 // ✅ FUNCIÓN PARA MOSTRAR ESTADÍSTICAS DE EQUIPOS EN TABLA
@@ -1051,26 +1304,31 @@ async function mostrarTodasEstadisticasJugadores() {
 
     try {
         const csrfToken = getCsrfToken();
+        const requestData = {
+            jugador1_id: jugador1Id,
+            jugador2_id: jugador2Id
+        };
         
-        // ✅ UNA SOLA PETICIÓN PARA TODAS LAS ESTADÍSTICAS
+        console.log('📤 Enviando request a:', `${API_CONFIG.BASE_URL}/ajax/comparar-jugadores-completo/`);
+        console.log('📤 Data:', requestData);
+        
         const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/comparar-jugadores-completo/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken,
             },
-            body: JSON.stringify({
-                jugador1_id: jugador1Id,
-                jugador2_id: jugador2Id
-            })
+            body: JSON.stringify(requestData)
         });
 
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response ok:', response.ok);
+
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('✅ Todas las estadísticas de jugadores:', data);
+        console.log('✅ Response data:', data);
 
         if (data.error) {
             throw new Error(data.error);
@@ -1080,100 +1338,204 @@ async function mostrarTodasEstadisticasJugadores() {
         renderTablaCompletaJugadoresOptimizada(data, estadisticasContainer);
 
     } catch (error) {
-        console.error('❌ Error cargando todas las estadísticas de jugadores:', error);
+        console.error('❌ Error completo:', error);
         estadisticasContainer.innerHTML = `
             <div class="error-chart">
                 <i class="bx bx-error"></i>
-                Error: ${error.message}
+                <strong>Error:</strong> ${error.message}
+                <br><br>
+                <button onclick="mostrarTodasEstadisticasJugadores()" class="retry-btn">Reintentar</button>
             </div>
         `;
     }
 }
 
-// ✅ FUNCIÓN OPTIMIZADA PARA RENDERIZAR TABLA COMPLETA DE EQUIPOS
-function renderTablaCompletaEquiposOptimizada(data, container) {
-    const { equipo1, equipo2, grupos } = data;
+// ✅ FUNCIÓN PARA RENDERIZAR TABLA COMPLETA DE EQUIPOS OPTIMIZADA
+function renderTablaCompletaEquiposOptimizada(data) {
+    console.log('🎨 Renderizando tabla completa de equipos (CON VALIDACIÓN CORREGIDA)');
+    console.log('📊 Data recibida:', data);
     
+    const container = document.getElementById('estadisticas-comparacion-equipos');
+    if (!container) {
+        console.error('❌ Contenedor estadisticas-comparacion-equipos no encontrado');
+        return;
+    }
+
+    // ✅ VALIDAR QUE data.grupos EXISTA
+    if (!data || !data.grupos) {
+        console.error('❌ No hay datos de grupos disponibles');
+        container.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error-circle"></i>
+                <h4>Error de datos</h4>
+                <p>No se pudieron cargar los grupos de estadísticas</p>
+            </div>
+        `;
+        return;
+    }
+
+    console.log('🔍 Tipo de data.grupos:', typeof data.grupos);
+    console.log('🔍 data.grupos es array:', Array.isArray(data.grupos));
+    console.log('🔍 Contenido de data.grupos:', data.grupos);
+
+    // ✅ CONVERTIR OBJETO A ARRAY SI ES NECESARIO
+    let gruposArray;
+    
+    if (Array.isArray(data.grupos)) {
+        // Ya es un array
+        gruposArray = data.grupos;
+        console.log('✅ data.grupos ya es un array');
+    } else if (typeof data.grupos === 'object' && data.grupos !== null) {
+        // Es un objeto, convertir a array
+        gruposArray = Object.entries(data.grupos).map(([key, grupo]) => {
+            console.log(`🔄 Procesando grupo ${key}:`, grupo);
+            return {
+                id: key,
+                nombre: grupo.nombre || key,
+                icono: grupo.icono || 'bx-stats',
+                estadisticas: grupo.estadisticas || []
+            };
+        });
+        console.log('✅ Objeto convertido a array:', gruposArray.length, 'grupos');
+    } else {
+        console.error('❌ data.grupos no es ni objeto ni array:', data.grupos);
+        container.innerHTML = `
+            <div class="insufficient-stats-message">
+                <div class="stats-warning-icon">
+                    <i class="bx bx-time-five"></i>
+                </div>
+                <h4>⏱️ Sin Estadísticas Detalladas</h4>
+                <div class="players-without-stats">
+                    <p><strong>${data.equipo1?.nombre || 'Equipo 1'}</strong> y/o <strong>${data.equipo2?.nombre || 'Equipo 2'}</strong> no tienen estadísticas suficientes para comparar.</p>
+                </div>
+                <div class="stats-explanation">
+                    <p><i class="bx bx-info-circle"></i> Verifica que ambos equipos tengan datos estadísticos.</p>
+                </div>
+                <div class="alternative-options">
+                    <button onclick="toggleModoEquipos('graficos')" class="btn-alternative">
+                        <i class="bx bx-bar-chart"></i> Ver Gráficos
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ VERIFICAR SI HAY GRUPOS VÁLIDOS
+    if (gruposArray.length === 0) {
+        console.warn('⚠️ No hay grupos disponibles');
+        container.innerHTML = `
+            <div class="insufficient-stats-message">
+                <div class="stats-warning-icon">
+                    <i class="bx bx-time-five"></i>
+                </div>
+                <h4>⏱️ Sin Estadísticas Detalladas</h4>
+                <div class="players-without-stats">
+                    <p><strong>${data.equipo1?.nombre || 'Equipo 1'}</strong> y/o <strong>${data.equipo2?.nombre || 'Equipo 2'}</strong> no tienen estadísticas completas disponibles.</p>
+                </div>
+                <div class="stats-explanation">
+                    <p><i class="bx bx-info-circle"></i> No se encontraron grupos de estadísticas para estos equipos.</p>
+                </div>
+                <div class="alternative-options">
+                    <button onclick="toggleModoEquipos('graficos')" class="btn-alternative">
+                        <i class="bx bx-bar-chart"></i> Ver Gráficos
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    console.log(`✅ ${gruposArray.length} grupos encontrados para procesar`);
+
+    // ✅ GENERAR HTML DE LA TABLA
     let html = `
-        <div class="tabla-comparacion completa">
-            <div class="estadisticas-header">
-                <h3>Comparación Completa: ${equipo1.nombre} vs ${equipo2.nombre}</h3>
-                <p class="subtitulo">Todas las estadísticas por categorías</p>
+        <div class="estadisticas-header">
+            <h3>Comparación Completa de Equipos</h3>
+            <div class="subtitulo">Todas las estadísticas disponibles</div>
+        </div>
+        
+        <div class="info-equipos">
+            <div class="equipo-info equipo1-info">
+                <div class="nombre-equipo">${data.equipo1?.nombre || 'Equipo 1'}</div>
+                <div class="liga-equipo">${data.equipo1?.liga || 'Liga no especificada'}</div>
+                <div class="nombre-corto">${data.equipo1?.nombre_corto || (data.equipo1?.nombre || 'E1').substring(0, 10)}</div>
             </div>
             
-            <!-- ✅ INFORMACIÓN DE EQUIPOS -->
-            <div class="info-equipos">
-                <div class="equipo-info equipo1-info">
-                    <div class="nombre-equipo">${equipo1.nombre}</div>
-                    <div class="liga-equipo">${equipo1.liga}</div>
-                </div>
-                <div class="vs-separator">VS</div>
-                <div class="equipo-info equipo2-info">
-                    <div class="nombre-equipo">${equipo2.nombre}</div>
-                    <div class="liga-equipo">${equipo2.liga}</div>
-                </div>
+            <div class="vs-separator">VS</div>
+            
+            <div class="equipo-info equipo2-info">
+                <div class="nombre-equipo">${data.equipo2?.nombre || 'Equipo 2'}</div>
+                <div class="liga-equipo">${data.equipo2?.liga || 'Liga no especificada'}</div>
+                <div class="nombre-corto">${data.equipo2?.nombre_corto || (data.equipo2?.nombre || 'E2').substring(0, 10)}</div>
             </div>
+        </div>
+        
+        <div class="tabla-comparacion completa">
     `;
 
-    // ✅ GENERAR TABLA PARA CADA GRUPO (MÁS RÁPIDO)
-    Object.entries(grupos).forEach(([grupoKey, grupoData]) => {
-        const { nombre, icono, estadisticas, valores_equipo1, valores_equipo2 } = grupoData;
+    // ✅ PROCESAR CADA GRUPO (AHORA FUNCIONA CON ARRAY)
+    gruposArray.forEach((grupo, index) => {
+        console.log(`🔄 Procesando grupo ${index + 1}/${gruposArray.length}: ${grupo.nombre}`, grupo);
         
+        // ✅ VALIDAR QUE EL GRUPO TENGA ESTADÍSTICAS
+        if (!grupo.estadisticas || !Array.isArray(grupo.estadisticas) || grupo.estadisticas.length === 0) {
+            console.warn(`⚠️ Grupo ${grupo.nombre} no tiene estadísticas válidas:`, grupo.estadisticas);
+            return; // Saltar este grupo
+        }
+
         html += `
             <div class="grupo-estadisticas">
-                <h4 class="grupo-titulo">
-                    <i class="bx ${icono}"></i>
-                    ${nombre}
-                </h4>
+                <div class="grupo-titulo">
+                    <i class="bx ${grupo.icono || 'bx-stats'}"></i>
+                    ${grupo.nombre}
+                </div>
+                
                 <table class="stats-table">
                     <thead>
                         <tr>
                             <th class="stat-name">Estadística</th>
-                            <th class="equipo1-col">${equipo1.nombre}</th>
-                            <th class="equipo2-col">${equipo2.nombre}</th>
+                            <th class="equipo1-col">${data.equipo1?.nombre || 'Equipo 1'}</th>
+                            <th class="equipo2-col">${data.equipo2?.nombre || 'Equipo 2'}</th>
                             <th class="diferencia-col">Diferencia</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
 
-        // ✅ AGREGAR FILAS DE ESTADÍSTICAS (OPTIMIZADO)
-        estadisticas.forEach((stat, index) => {
-            const valor1 = valores_equipo1[index];
-            const valor2 = valores_equipo2[index];
+        // ✅ PROCESAR ESTADÍSTICAS DEL GRUPO
+        grupo.estadisticas.forEach((stat, statIndex) => {
+            console.log(`  📊 Procesando estadística ${statIndex + 1}: ${stat.nombre}`, stat);
+            
+            const valor1 = parseFloat(stat.valor_equipo1 || 0);
+            const valor2 = parseFloat(stat.valor_equipo2 || 0);
             const diferencia = valor1 - valor2;
             
+            // Determinar cuál es mejor
             const equipo1Mejor = valor1 > valor2;
             const equipo2Mejor = valor2 > valor1;
             
-            const clase1 = equipo1Mejor ? 'mejor-valor equipo1-col' : 'equipo1-col';
-            const clase2 = equipo2Mejor ? 'mejor-valor equipo2-col' : 'equipo2-col';
-            
-            let claseDiferencia = 'diferencia neutra';
-            let simboloDiferencia = '';
+            // Clase para diferencia
+            let diferenciaClase = 'neutra';
+            let signo = '';
             if (diferencia > 0) {
-                claseDiferencia = 'diferencia positiva';
-                simboloDiferencia = '+';
+                diferenciaClase = 'positiva';
+                signo = '+';
             } else if (diferencia < 0) {
-                claseDiferencia = 'diferencia negativa';
-                simboloDiferencia = '';
+                diferenciaClase = 'negativa';
             }
 
             html += `
                 <tr>
                     <td class="stat-name">${stat.nombre}</td>
-                    <td class="${clase1}">
-                        <div class="stat-value">
-                            <div class="valor-principal">${valor1.toFixed(2)}</div>
-                        </div>
+                    <td class="equipo1-col ${equipo1Mejor ? 'mejor-valor' : ''}">
+                        <div class="valor-principal">${valor1.toFixed(2)}</div>
                     </td>
-                    <td class="${clase2}">
-                        <div class="stat-value">
-                            <div class="valor-principal">${valor2.toFixed(2)}</div>
-                        </div>
+                    <td class="equipo2-col ${equipo2Mejor ? 'mejor-valor' : ''}">
+                        <div class="valor-principal">${valor2.toFixed(2)}</div>
                     </td>
-                    <td class="${claseDiferencia}">
-                        ${simboloDiferencia}${diferencia.toFixed(2)}
+                    <td class="diferencia ${diferenciaClase}">
+                        ${signo}${Math.abs(diferencia).toFixed(2)}
                     </td>
                 </tr>
             `;
@@ -1186,99 +1548,200 @@ function renderTablaCompletaEquiposOptimizada(data, container) {
         `;
     });
 
-    html += '</div>';
+    html += `</div>`;
+    
     container.innerHTML = html;
-    console.log('✅ Tabla completa de estadísticas de equipos renderizada (OPTIMIZADA)');
+    console.log('✅ Tabla completa de estadísticas de equipos renderizada (CORREGIDA)');
 }
 
-// ✅ FUNCIÓN OPTIMIZADA PARA RENDERIZAR TABLA COMPLETA DE JUGADORES
-function renderTablaCompletaJugadoresOptimizada(data, container) {
-    const { jugador1, jugador2, grupos } = data;
+// ✅ FUNCIÓN PARA RENDERIZAR TABLA COMPLETA DE JUGADORES OPTIMIZADA
+function renderTablaCompletaJugadoresOptimizada(data) {
+    console.log('🎨 Renderizando tabla completa de jugadores (CON VALIDACIÓN CORREGIDA)');
+    console.log('📊 Data recibida:', data);
     
+    const container = document.getElementById('estadisticas-comparacion-jugadores');
+    if (!container) {
+        console.error('❌ Contenedor estadisticas-comparacion-jugadores no encontrado');
+        return;
+    }
+
+    // ✅ VALIDAR QUE data.grupos EXISTA
+    if (!data || !data.grupos) {
+        console.error('❌ No hay datos de grupos disponibles');
+        container.innerHTML = `
+            <div class="error-chart">
+                <i class="bx bx-error-circle"></i>
+                <h4>Error de datos</h4>
+                <p>No se pudieron cargar los grupos de estadísticas</p>
+            </div>
+        `;
+        return;
+    }
+
+    console.log('🔍 Tipo de data.grupos:', typeof data.grupos);
+    console.log('🔍 data.grupos es array:', Array.isArray(data.grupos));
+    console.log('🔍 Contenido de data.grupos:', data.grupos);
+
+    // ✅ CONVERTIR OBJETO A ARRAY SI ES NECESARIO
+    let gruposArray;
+    
+    if (Array.isArray(data.grupos)) {
+        // Ya es un array
+        gruposArray = data.grupos;
+        console.log('✅ data.grupos ya es un array');
+    } else if (typeof data.grupos === 'object' && data.grupos !== null) {
+        // Es un objeto, convertir a array
+        gruposArray = Object.entries(data.grupos).map(([key, grupo]) => {
+            console.log(`🔄 Procesando grupo ${key}:`, grupo);
+            return {
+                id: key,
+                nombre: grupo.nombre || key,
+                icono: grupo.icono || 'bx-stats',
+                estadisticas: grupo.estadisticas || []
+            };
+        });
+        console.log('✅ Objeto convertido a array:', gruposArray.length, 'grupos');
+    } else {
+        console.error('❌ data.grupos no es ni objeto ni array:', data.grupos);
+        container.innerHTML = `
+            <div class="insufficient-stats-message">
+                <div class="stats-warning-icon">
+                    <i class="bx bx-time-five"></i>
+                </div>
+                <h4>⏱️ Sin Estadísticas Detalladas</h4>
+                <div class="players-without-stats">
+                    <p><strong>${data.jugador1?.nombre || 'Jugador 1'}</strong> y/o <strong>${data.jugador2?.nombre || 'Jugador 2'}</strong> no tienen estadísticas suficientes para comparar.</p>
+                </div>
+                <div class="stats-explanation">
+                    <p><i class="bx bx-info-circle"></i> Los jugadores necesitan haber jugado al menos 300 minutos para tener estadísticas completas.</p>
+                </div>
+                <div class="alternative-options">
+                    <button onclick="toggleModoJugadores('graficos')" class="btn-alternative">
+                        <i class="bx bx-bar-chart"></i> Ver Gráficos
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ VERIFICAR SI HAY GRUPOS VÁLIDOS
+    if (gruposArray.length === 0) {
+        console.warn('⚠️ No hay grupos disponibles');
+        container.innerHTML = `
+            <div class="insufficient-stats-message">
+                <div class="stats-warning-icon">
+                    <i class="bx bx-time-five"></i>
+                </div>
+                <h4>⏱️ Sin Estadísticas Detalladas</h4>
+                <div class="players-without-stats">
+                    <p><strong>${data.jugador1?.nombre || 'Jugador 1'}</strong> y/o <strong>${data.jugador2?.nombre || 'Jugador 2'}</strong> no tienen estadísticas completas disponibles.</p>
+                </div>
+                <div class="stats-explanation">
+                    <p><i class="bx bx-info-circle"></i> No se encontraron grupos de estadísticas para estos jugadores.</p>
+                </div>
+                <div class="alternative-options">
+                    <button onclick="toggleModoJugadores('graficos')" class="btn-alternative">
+                        <i class="bx bx-bar-chart"></i> Ver Gráficos
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    console.log(`✅ ${gruposArray.length} grupos encontrados para procesar`);
+
+    // ✅ GENERAR HTML DE LA TABLA
     let html = `
-        <div class="tabla-comparacion completa">
-            <div class="estadisticas-header">
-                <h3>Comparación Completa: ${jugador1.nombre} vs ${jugador2.nombre}</h3>
-                <p class="subtitulo">Todas las estadísticas por categorías</p>
+        <div class="estadisticas-header">
+            <h3>Comparación Completa de Jugadores</h3>
+            <div class="subtitulo">Todas las estadísticas disponibles por percentiles</div>
+        </div>
+        
+        <div class="info-jugadores">
+            <div class="jugador-info jugador1-info">
+                <div class="nombre-jugador">${data.jugador1?.nombre || 'Jugador 1'}</div>
+                <div class="equipo-jugador">${data.jugador1?.equipo || 'Sin equipo'}</div>
+                <div class="posicion-jugador">${data.jugador1?.posicion || 'Posición no especificada'}</div>
             </div>
             
-            <!-- ✅ INFORMACIÓN DE JUGADORES -->
-            <div class="info-jugadores">
-                <div class="jugador-info jugador1-info">
-                    <div class="nombre-jugador">${jugador1.nombre}</div>
-                    <div class="equipo-jugador">${jugador1.equipo}</div>
-                    <div class="posicion-jugador">${jugador1.posicion}</div>
-                    <div class="edad-pais">${jugador1.edad} años - ${jugador1.pais}</div>
-                </div>
-                <div class="vs-separator">VS</div>
-                <div class="jugador-info jugador2-info">
-                    <div class="nombre-jugador">${jugador2.nombre}</div>
-                    <div class="equipo-jugador">${jugador2.equipo}</div>
-                    <div class="posicion-jugador">${jugador2.posicion}</div>
-                    <div class="edad-pais">${jugador2.edad} años - ${jugador2.pais}</div>
-                </div>
+            <div class="vs-separator">VS</div>
+            
+            <div class="jugador-info jugador2-info">
+                <div class="nombre-jugador">${data.jugador2?.nombre || 'Jugador 2'}</div>
+                <div class="equipo-jugador">${data.jugador2?.equipo || 'Sin equipo'}</div>
+                <div class="posicion-jugador">${data.jugador2?.posicion || 'Posición no especificada'}</div>
             </div>
+        </div>
+        
+        <div class="tabla-comparacion completa">
     `;
 
-    // ✅ GENERAR TABLA PARA CADA GRUPO (MÁS RÁPIDO)
-    Object.entries(grupos).forEach(([grupoKey, grupoData]) => {
-        const { nombre, icono, estadisticas, valores_jugador1, valores_jugador2 } = grupoData;
+    // ✅ PROCESAR CADA GRUPO (AHORA FUNCIONA CON ARRAY)
+    gruposArray.forEach((grupo, index) => {
+        console.log(`🔄 Procesando grupo ${index + 1}/${gruposArray.length}: ${grupo.nombre}`, grupo);
         
+        // ✅ VALIDAR QUE EL GRUPO TENGA ESTADÍSTICAS
+        if (!grupo.estadisticas || !Array.isArray(grupo.estadisticas) || grupo.estadisticas.length === 0) {
+            console.warn(`⚠️ Grupo ${grupo.nombre} no tiene estadísticas válidas:`, grupo.estadisticas);
+            return; // Saltar este grupo
+        }
+
         html += `
             <div class="grupo-estadisticas">
-                <h4 class="grupo-titulo">
-                    <i class="bx ${icono}"></i>
-                    ${nombre}
-                </h4>
+                <div class="grupo-titulo">
+                    <i class="bx ${grupo.icono || 'bx-stats'}"></i>
+                    ${grupo.nombre}
+                </div>
+                
                 <table class="stats-table">
                     <thead>
                         <tr>
                             <th class="stat-name">Estadística</th>
-                            <th class="jugador1-col">${jugador1.nombre}</th>
-                            <th class="jugador2-col">${jugador2.nombre}</th>
+                            <th class="jugador1-col">${data.jugador1?.nombre || 'Jugador 1'}</th>
+                            <th class="jugador2-col">${data.jugador2?.nombre || 'Jugador 2'}</th>
                             <th class="diferencia-col">Diferencia</th>
                         </tr>
                     </thead>
                     <tbody>
         `;
 
-        // ✅ AGREGAR FILAS DE ESTADÍSTICAS (OPTIMIZADO)
-        estadisticas.forEach((stat, index) => {
-            const valor1 = valores_jugador1[index];
-            const valor2 = valores_jugador2[index];
+        // ✅ PROCESAR ESTADÍSTICAS DEL GRUPO
+        grupo.estadisticas.forEach((stat, statIndex) => {
+            console.log(`  📊 Procesando estadística ${statIndex + 1}: ${stat.nombre}`, stat);
+            
+            const valor1 = parseFloat(stat.valor_jugador1 || 0);
+            const valor2 = parseFloat(stat.valor_jugador2 || 0);
             const diferencia = valor1 - valor2;
             
+            // Determinar cuál es mejor (para percentiles, más alto siempre es mejor)
             const jugador1Mejor = valor1 > valor2;
             const jugador2Mejor = valor2 > valor1;
             
-            const clase1 = jugador1Mejor ? 'mejor-valor jugador1-col' : 'jugador1-col';
-            const clase2 = jugador2Mejor ? 'mejor-valor jugador2-col' : 'jugador2-col';
-            
-            let claseDiferencia = 'diferencia neutra';
-            let simboloDiferencia = '';
+            // Clase para diferencia
+            let diferenciaClase = 'neutra';
+            let signo = '';
             if (diferencia > 0) {
-                claseDiferencia = 'diferencia positiva';
-                simboloDiferencia = '+';
+                diferenciaClase = 'positiva';
+                signo = '+';
             } else if (diferencia < 0) {
-                claseDiferencia = 'diferencia negativa';
-                simboloDiferencia = '';
+                diferenciaClase = 'negativa';
             }
 
             html += `
                 <tr>
                     <td class="stat-name">${stat.nombre}</td>
-                    <td class="${clase1}">
-                        <div class="stat-value">
-                            <div class="valor-principal">${valor1.toFixed(2)}</div>
-                        </div>
+                    <td class="jugador1-col ${jugador1Mejor ? 'mejor-valor' : ''}">
+                        <div class="valor-principal">${Math.round(valor1)}</div>
+                        <div class="percentil">Percentil ${Math.round(valor1)}</div>
                     </td>
-                    <td class="${clase2}">
-                        <div class="stat-value">
-                            <div class="valor-principal">${valor2.toFixed(2)}</div>
-                        </div>
+                    <td class="jugador2-col ${jugador2Mejor ? 'mejor-valor' : ''}">
+                        <div class="valor-principal">${Math.round(valor2)}</div>
+                        <div class="percentil">Percentil ${Math.round(valor2)}</div>
                     </td>
-                    <td class="${claseDiferencia}">
-                        ${simboloDiferencia}${diferencia.toFixed(2)}
+                    <td class="diferencia ${diferenciaClase}">
+                        ${signo}${Math.abs(diferencia).toFixed(1)}
                     </td>
                 </tr>
             `;
@@ -1291,7 +1754,137 @@ function renderTablaCompletaJugadoresOptimizada(data, container) {
         `;
     });
 
-    html += '</div>';
+    html += `</div>`;
+    
     container.innerHTML = html;
-    console.log('✅ Tabla completa de estadísticas de jugadores renderizada (OPTIMIZADA)');
+    console.log('✅ Tabla completa de estadísticas de jugadores renderizada (CORREGIDA)');
 }
+
+// ✅ FUNCIÓN AUXILIAR PARA GENERAR TOOLTIP DE JUGADORES
+function generarTooltipJugadores(data, jugadorNombre, indicatorIndex) {
+    try {
+        const statName = data.estadisticas[indicatorIndex]?.nombre || 'Estadística';
+        let valor = 0;
+        
+        // Determinar el valor según el jugador
+        if (jugadorNombre === data.jugador1?.nombre) {
+            valor = data.valores_jugador1[indicatorIndex] || 0;
+        } else if (jugadorNombre === data.jugador2?.nombre) {
+            valor = data.valores_jugador2[indicatorIndex] || 0;
+        }
+        
+        return `
+            <div style="padding: 8px;">
+                <strong style="color: #00d4ff;">${jugadorNombre}</strong><br/>
+                <span style="color: #fff;">${statName}</span><br/>
+                📊 Percentil: <strong>${Math.round(valor)}</strong>
+                <div style="font-size: 11px; color: #ccc; margin-top: 3px;">
+                    (Mejor que ${Math.round(valor)}% de jugadores)
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error generando tooltip:', error);
+        return `<div style="padding: 5px;"><strong>${jugadorNombre}</strong></div>`;
+    }
+}
+
+// ✅ FUNCIÓN AUXILIAR PARA GENERAR TOOLTIP DE EQUIPOS
+function generarTooltipEquipos(data, equipoNombre, indicatorIndex) {
+    try {
+        const statName = data.estadisticas[indicatorIndex]?.nombre || 'Estadística';
+        let valor = 0;
+        
+        // Determinar el valor según el equipo
+        if (equipoNombre === data.equipo1?.nombre) {
+            valor = data.valores_equipo1[indicatorIndex] || 0;
+        } else if (equipoNombre === data.equipo2?.nombre) {
+            valor = data.valores_equipo2[indicatorIndex] || 0;
+        }
+        
+        return `
+            <div style="padding: 8px;">
+                <strong style="color: #00d4ff;">${equipoNombre}</strong><br/>
+                <span style="color: #fff;">${statName}</span><br/>
+                📊 Percentil: <strong>${Math.round(valor)}</strong>
+                <div style="font-size: 11px; color: #ccc; margin-top: 3px;">
+                    (Mejor que ${Math.round(valor)}% de equipos)
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error generando tooltip:', error);
+        return `<div style="padding: 5px;"><strong>${equipoNombre}</strong></div>`;
+    }
+}
+
+// ✅ FUNCIÓN PARA MOSTRAR MENSAJE DE ESTADÍSTICAS INSUFICIENTES
+function mostrarMensajeEstadisticasInsuficientes(container, jugadoresSinStats, tipo = 'jugadores') {
+    const esJugadores = tipo === 'jugadores';
+    const entidad1 = esJugadores ? 'jugador' : 'equipo';
+    const entidad2 = esJugadores ? 'jugadores' : 'equipos';
+    const requisito = esJugadores ? 'al menos 300 minutos' : 'estadísticas suficientes';
+    
+    container.innerHTML = `
+        <div class="insufficient-stats-message">
+            <div class="stats-warning-icon">
+                <i class="bx bx-time-five"></i>
+            </div>
+            <h4>⏱️ Sin Estadísticas Detalladas</h4>
+            <div class="players-without-stats">
+                <p>Los siguientes ${entidad2} no tienen estadísticas completas:</p>
+                <ul>
+                    ${jugadoresSinStats.map(nombre => `<li><strong>${nombre}</strong></li>`).join('')}
+                </ul>
+            </div>
+            <div class="stats-explanation">
+                <p><i class="bx bx-info-circle"></i> Los ${entidad2} necesitan ${requisito} para tener estadísticas completas.</p>
+                <p>Puedes comparar gráficamente usando solo las estadísticas básicas disponibles.</p>
+            </div>
+            <div class="alternative-options">
+                <button onclick="toggleModo${esJugadores ? 'Jugadores' : 'Equipos'}('graficos')" class="btn-alternative">
+                    <i class="bx bx-bar-chart"></i> Ver Gráficos
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// ✅ FUNCIÓN PARA VALIDAR DATOS DE COMPARACIÓN
+function validarDatosComparacion(data, tipo = 'jugadores') {
+    if (!data) {
+        console.error('❌ No hay datos para validar');
+        return { valido: false, error: 'No hay datos disponibles' };
+    }
+    
+    const esJugadores = tipo === 'jugadores';
+    const entidad1Key = esJugadores ? 'jugador1' : 'equipo1';
+    const entidad2Key = esJugadores ? 'jugador2' : 'equipo2';
+    
+    if (!data[entidad1Key] || !data[entidad2Key]) {
+        console.error(`❌ Faltan datos de ${tipo}:`, { 
+            [entidad1Key]: !!data[entidad1Key], 
+            [entidad2Key]: !!data[entidad2Key] 
+        });
+        return { 
+            valido: false, 
+            error: `Información de ${tipo} incompleta` 
+        };
+    }
+    
+    if (!data.estadisticas || !data[`valores_${entidad1Key.split('1')[0]}1`] || !data[`valores_${entidad1Key.split('1')[0]}2`]) {
+        console.error('❌ Estadísticas faltantes:', {
+            estadisticas: !!data.estadisticas,
+            valores1: !!data[`valores_${entidad1Key.split('1')[0]}1`],
+            valores2: !!data[`valores_${entidad1Key.split('1')[0]}2`]
+        });
+        return { 
+            valido: false, 
+            error: 'Faltan estadísticas para la comparación' 
+        };
+    }
+    
+    return { valido: true };
+}
+
+console.log('✅ Funciones de tabla completa para jugadores cargadas correctamente');

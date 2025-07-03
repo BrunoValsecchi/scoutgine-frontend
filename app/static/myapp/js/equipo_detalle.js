@@ -9,15 +9,17 @@ window.equipoDetalleData = {
 
 // Función para obtener ID del equipo desde la URL
 function getEquipoIdFromUrl() {
+    // 1. Primero busca en los parámetros GET (?id=10)
+    const urlParams = new URLSearchParams(window.location.search);
+    let equipoId = urlParams.get('id');
+    if (equipoId) return equipoId;
+
+    // 2. Si no está, busca en la ruta tipo /equipo_detalle/10/
     const path = window.location.pathname;
     const match = path.match(/\/equipo_detalle\/(\d+)\//);
-    if (match) {
-        return match[1];
-    }
-    
-    // Fallback para URLs con parámetros GET
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('id');
+    if (match) return match[1];
+
+    return null;
 }
 
 // Inicialización cuando se carga el DOM
@@ -405,5 +407,16 @@ function renderEstadisticas(data) {
 
     contentEl.innerHTML = estadisticasHTML;
 }
+
+// Listener para eventos de navegación desde ligas
+document.addEventListener('ligasNavAction', function(e) {
+    const { action } = e.detail;
+    // Solo ejecuta si estamos en equipo_detalle
+    if (['btn-tablas', 'btn-stats-equipo', 'btn-stats-jugadores'].includes(action)) {
+        // Llama a la función de navegación interna
+        const btn = document.getElementById(action);
+        if (btn) btn.click();
+    }
+});
 
 console.log("✅ equipo_detalle.js inicializado");
