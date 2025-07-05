@@ -81,6 +81,19 @@ function getCurrentPage() {
 // ✅ CONFIGURACIONES DE TOPNAV POR PÁGINA
 function getTopNavForPage(pageName) {
     const configs = {
+        'ligas': `
+            <div class="topnav-content">
+                <div class="topnav-searchbar">
+                    <input type="text" placeholder="Buscar ligas..." class="topnav-search-input">
+                </div>
+                <div class="top-nav-actions">
+                    <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
+                    <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipos</a>
+                    <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Stats Jugadores</a>
+                </div>
+            </div>
+        `,
+        
         'comparacion': `
             <div class="topnav-content">
                 <div class="topnav-searchbar">
@@ -89,6 +102,32 @@ function getTopNavForPage(pageName) {
                 <div class="top-nav-actions">
                     <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
                     <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
+                </div>
+            </div>
+        `,
+        
+        'estadisticas': `
+            <div class="topnav-content">
+                <div class="topnav-searchbar">
+                    <input type="text" placeholder="Buscar estadísticas..." class="topnav-search-input">
+                </div>
+                <div class="top-nav-actions">
+                    <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
+                    <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
+                    <a href="#" id="btn-comparacion" class="nav-action-btn">Comparación</a>
+                </div>
+            </div>
+        `,
+        
+        'equipo_detalle': `
+            <div class="topnav-content">
+                <div class="topnav-searchbar">
+                    <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
+                </div>
+                <div class="top-nav-actions">
+                    <a href="#" id="btn-tablas" class="nav-action-btn active">Información</a>
+                    <a href="#" id="btn-stats-equipo" class="nav-action-btn">Plantilla</a>
+                    <a href="#" id="btn-stats-jugadores" class="nav-action-btn">Estadísticas</a>
                 </div>
             </div>
         `,
@@ -126,7 +165,7 @@ function getTopNavForPage(pageName) {
     `;
 }
 
-// ✅ CONFIGURAR EVENTOS DEL TOPNAV
+// ✅ CONFIGURAR EVENTOS DEL TOPNAV - ACTUALIZAR EN header.js
 function setupTopNavEvents() {
     // Event delegation para botones de navegación
     document.addEventListener('click', function(e) {
@@ -139,7 +178,7 @@ function setupTopNavEvents() {
     console.log("✅ TopNav event listeners configurados");
 }
 
-// ✅ MANEJAR BOTONES DE NAVEGACIÓN
+// ✅ MANEJAR BOTONES DE NAVEGACIÓN - ACTUALIZAR EN header.js
 function handleNavButton(button) {
     const currentPage = getCurrentPage();
     const buttonId = button.id;
@@ -154,12 +193,27 @@ function handleNavButton(button) {
     
     console.log(`🖱️ Botón clickeado: ${buttonId} en página: ${currentPage}`);
     
-    // ✅ HANDLER ESPECÍFICO PARA COMPARACION
-    if (currentPage === 'comparacion') {
+    // ✅ HANDLER ESPECÍFICO PARA CADA PÁGINA
+    if (currentPage === 'ligas') {
+        const ligasEvent = new CustomEvent('ligasNavAction', {
+            detail: { action: buttonId }
+        });
+        document.dispatchEvent(ligasEvent);
+    } else if (currentPage === 'comparacion') {
         const comparacionEvent = new CustomEvent('comparacionNavAction', {
             detail: { action: buttonId }
         });
         document.dispatchEvent(comparacionEvent);
+    } else if (currentPage === 'estadisticas') {
+        const estadisticasEvent = new CustomEvent('estadisticasNavAction', {
+            detail: { action: buttonId }
+        });
+        document.dispatchEvent(estadisticasEvent);
+    } else if (currentPage === 'equipo_detalle') {
+        const equipoDetalleEvent = new CustomEvent('equipoDetalleNavAction', {
+            detail: { action: buttonId }
+        });
+        document.dispatchEvent(equipoDetalleEvent);
     }
     
     // Evento genérico
@@ -206,6 +260,69 @@ function markActivePage() {
             console.log(`❌ Página no mapeada: ${currentPage}`);
         }
     }, 100);
+}
+
+// ✅ AGREGAR A LA FUNCIÓN handleTopNavigation en header.js
+
+function handleTopNavigation(clickedButton) {
+    console.log('🎯 Navegación clickeada:', clickedButton.id);
+    
+    // ✅ DETECTAR PÁGINA ACTUAL
+    const currentPath = window.location.pathname;
+    const isComparacion = currentPath.includes('/comparacion');
+    const isEstadisticas = currentPath.includes('/estadisticas');
+    const isEquipoDetalle = currentPath.includes('/equipo_detalle') || currentPath.match(/\/equipo\/\d+\//);
+    
+    // ✅ RESETEAR ESTADOS ACTIVOS
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    clickedButton.classList.add('active');
+    
+    // ✅ MANEJAR NAVEGACIÓN SEGÚN PÁGINA ACTUAL
+    if (isComparacion) {
+        // ✅ NAVEGACIÓN EN PÁGINA DE COMPARACIÓN
+        handleComparacionNavigation(clickedButton.id);
+    } else if (isEstadisticas) {
+        // ✅ NAVEGACIÓN EN PÁGINA DE ESTADÍSTICAS
+        handleEstadisticasNavigation(clickedButton.id);
+    } else if (isEquipoDetalle) {
+        // ✅ NAVEGACIÓN EN PÁGINA DE EQUIPO DETALLE
+        handleEquipoDetalleNavigation(clickedButton.id);
+    } else {
+        // ✅ NAVEGACIÓN GLOBAL (CAMBIO DE PÁGINA)
+        handleGlobalNavigation(clickedButton.id);
+    }
+}
+
+// ✅ NUEVA FUNCIÓN PARA MANEJAR NAVEGACIÓN EN EQUIPO DETALLE
+function handleEquipoDetalleNavigation(buttonId) {
+    console.log('⚽ Manejando navegación en equipo detalle:', buttonId);
+    
+    const eventDetail = { action: buttonId };
+    
+    switch(buttonId) {
+        case 'btn-tablas':
+            // ✅ CAMBIAR A VISTA DE INFORMACIÓN
+            document.dispatchEvent(new CustomEvent('equipoDetalleNavAction', { 
+                detail: eventDetail 
+            }));
+            break;
+            
+        case 'btn-stats-equipo':
+            // ✅ CAMBIAR A VISTA DE PLANTILLA
+            document.dispatchEvent(new CustomEvent('equipoDetalleNavAction', { 
+                detail: eventDetail 
+            }));
+            break;
+            
+        case 'btn-stats-jugadores':
+            // ✅ CAMBIAR A VISTA DE ESTADÍSTICAS
+            document.dispatchEvent(new CustomEvent('equipoDetalleNavAction', { 
+                detail: eventDetail 
+            }));
+            break;
+    }
 }
 
 console.log("✅ HEADER.JS INICIALIZADO");

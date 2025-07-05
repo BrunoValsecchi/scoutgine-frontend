@@ -30,6 +30,27 @@
 
         <!-- CONTENIDO PRINCIPAL (inicialmente oculto) -->
         <div id="estadisticas-content" style="display: none;">
+            <!-- ✅ SELECTOR GLOBAL ARRIBA DE TODO -->
+            <div class="global-stat-selector">
+                <div class="selector-container">
+                    <label for="global-stat-select" class="stat-label">
+                        <i class='bx bx-bar-chart'></i> Estadística a analizar:
+                    </label>
+                    <select id="global-stat-select" class="stat-select">
+                        <option value="pass_accuracy_outfield">Precisión de pases</option>
+                        <option value="goals">Goles</option>
+                        <option value="assists">Asistencias</option>
+                        <option value="interceptions">Intercepciones</option>
+                        <option value="tackles_won">Entradas ganadas</option>
+                        <option value="shots_on_target">Tiros al arco</option>
+                        <option value="successful_passes">Pases exitosos</option>
+                        <option value="recoveries">Recuperaciones</option>
+                        <option value="duels_won">Duelos ganados</option>
+                        <option value="saves">Atajadas</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- HEADER HERO -->
             <div class="hero-section">
                 <div class="hero-background"></div>
@@ -79,15 +100,16 @@
                 <!-- RADAR CHART -->
                 <div class="chart-card radar-card">
                     <div class="chart-header">
-                        <h3><i class="bx bx-radar"></i> Análisis de Rendimiento</h3>
+                        <h3><i class="bx bx-radar"></i> Radar del Jugador</h3>
                         <div class="chart-controls">
-                            <select id="radar-jugador-group-selector" class="control-select">
-                                <option value="ofensivos">🔴 Ofensivos</option>
-                                <option value="defensivos">🛡️ Defensivos</option>
-                                <option value="creacion">⚡ Creación</option>
-                                <option value="arquero">🥅 Arquero</option>
+                            <label for="radar-group-selector">Grupo:</label>
+                            <select id="radar-group-selector" class="control-select">
+                                <option value="defensivos">Defensivos</option>
+                                <option value="ofensivos">Ofensivos</option>
+                                <option value="generales">Generales</option>
                             </select>
-                            <select id="posicion-jugador-selector" class="control-select" style="display: none"></select>
+                            
+                            <!-- El selector de posición se creará automáticamente -->
                         </div>
                     </div>
                     <div class="chart-content">
@@ -95,13 +117,11 @@
                     </div>
                 </div>
 
-                <!-- BOXPLOT CHART -->
+                 <!-- BOXPLOT CHART - ELIMINAR LABEL DE POSICIÓN -->
                 <div class="chart-card boxplot-card">
                     <div class="chart-header">
                         <h3><i class="bx bx-bar-chart-square"></i> Distribución</h3>
                         <div class="chart-controls">
-                            <label for="posicion-boxplot-selector">Posición:</label>
-                            <select id="posicion-boxplot-selector" class="control-select"></select>
                         </div>
                     </div>
                     <div class="chart-content">
@@ -110,15 +130,17 @@
                 </div>
             </div>
 
-            <!-- GRÁFICO DE DISPERSIÓN -->
+            <!-- GRÁFICO DE DISPERSIÓN - ELIMINAR LABEL DE POSICIÓN -->
             <div class="chart-card scatter-card">
                 <div class="chart-header">
                     <h3><i class="bx bx-scatter-chart"></i> Análisis de Dispersión</h3>
                     <div class="chart-controls">
-                        <label for="posicion-dispersion-selector">Posición:</label>
-                        <select id="posicion-dispersion-selector" class="control-select"></select>
-                        <label for="stat-y-selector">Eje Y:</label>
-                        <select id="stat-y-selector" class="control-select"></select>
+                        
+                        <!-- ✅ MANTENER: Selector del eje Y -->
+                        <label for="stat-y-selector" class="control-label">Eje Y:</label>
+                        <select id="stat-y-selector" class="control-select">
+                            <option value="">Seleccionar estadística...</option>
+                        </select>
                     </div>
                 </div>
                 <div class="chart-content scatter-content">
@@ -154,7 +176,14 @@
             // Obtener parámetros de URL
             const urlParams = new URLSearchParams(window.location.search);
             const jugadorId = urlParams.get('jugador');
-            const estadistica = urlParams.get('stat');
+            const estadistica = urlParams.get('stat') || urlParams.get('estadistica') || 'Precisión de pases';  // ✅ CAMBIO AQUÍ
+
+            console.log('🔍 DEBUG - Parámetros URL:', {
+                jugadorId,
+                estadistica,
+                urlCompleta: window.location.href,
+                API_BASE_URL: API_CONFIG.BASE_URL
+            });
             
             if (jugadorId && estadistica) {
                 window.jugadorData.jugadorId = jugadorId;
@@ -184,7 +213,9 @@
                 const data = await response.json();
                 
                 if (data.error) {
-                    throw new Error(data.error);
+                    let msg = data.error;
+                    if (data.traceback) msg += "\n" + data.traceback;
+                    throw new Error(msg);
                 }
                 
                 // Actualizar datos globales

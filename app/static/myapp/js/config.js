@@ -1,14 +1,14 @@
 console.log("=== CONFIG.JS CARGADO ===");
 
-// ✅ CONFIGURACIÓN DE API
+// ✅ DETECTAR AUTOMÁTICAMENTE EL ENTORNO
+const isProduction = window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost';
+
 const API_CONFIG = {
-    // ✅ PARA DESARROLLO LOCAL
-    BASE_URL: 'http://127.0.0.1:8000',
+    // ✅ CAMBIO AUTOMÁTICO ENTRE DESARROLLO Y PRODUCCIÓN
+    BASE_URL: isProduction 
+        ? 'https://scoutgine-backend.onrender.com'  // ← TU BACKEND EN RENDER
+        : 'http://127.0.0.1:8000',                   // ← DESARROLLO LOCAL
     
-    // ✅ PARA PRODUCCIÓN (descomenta cuando deploys)
-    // BASE_URL: 'https://scoutgine-backend.onrender.com',
-    
-    // ✅ AGREGAR ENDPOINTS QUE FALTAN
     ENDPOINTS: {
         EQUIPOS: '/ajax/equipos/',
         RECOMENDAR_JUGADORES: '/ajax/recomendar-jugadores/',
@@ -49,6 +49,7 @@ async function fetchWithCSRF(url, options = {}) {
 }
 
 console.log('✅ CONFIG.JS INICIALIZADO');
+console.log('🌍 Entorno:', isProduction ? 'PRODUCCIÓN' : 'DESARROLLO');
 console.log('🌐 BASE_URL:', API_CONFIG.BASE_URL);
 console.log('🔗 ENDPOINTS:', API_CONFIG.ENDPOINTS);
 

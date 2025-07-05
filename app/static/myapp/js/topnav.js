@@ -225,7 +225,7 @@ function setupLigasEquiposButtons() {
             const currentPath = window.location.pathname;
             if (currentPath.includes('/ligas/') && !statsEquipoContainer.innerHTML.trim()) {
                 console.log("Cargando stats equipos...");
-                fetch('https://scoutgine-backend.onrender.com/stats_equipos/')
+                fetch('${API_CONFIG.BASE_URL}/stats_equipos/')
                     .then(res => res.text())
                     .then(html => {
                         statsEquipoContainer.innerHTML = html;
@@ -252,7 +252,7 @@ function setupLigasEquiposButtons() {
             const currentPath = window.location.pathname;
             if (currentPath.includes('/ligas/')) {
                 console.log("🔄 Iniciando fetch a /stats_jugadores/");
-                fetch('https://scoutgine-backend.onrender.com/stats_jugadores/')
+                fetch('${API_CONFIG.BASE_URL}/stats_jugadores/')
                     .then(res => {
                         console.log("✅ Response recibida:", res.status, res.statusText);
                         return res.text();
@@ -643,6 +643,8 @@ function getCurrentPageName() {
     return filename || 'index';
 }
 
+// ✅ VERIFICAR EN getTopNavForPage que existe la configuración
+
 function getTopNavForPage(pageName) {
     const topnavConfigs = {
         'ligas': `
@@ -757,7 +759,29 @@ function handleNavAction(actionId) {
         case 'equipo':
             handleEquipoAction(actionId);
             break;
+        case 'equipo_detalle':
+            handleEquipoDetalleAction(actionId);
+            break;
+        case 'estadisticas':
+            handleEstadisticasAction(actionId);
+            break;
     }
+}
+
+// NUEVA FUNCIÓN PARA MANEJAR ACCIONES DE EQUIPO DETALLE
+function handleEquipoDetalleAction(actionId) {
+    const event = new CustomEvent('equipoDetalleNavAction', { 
+        detail: { action: actionId } 
+    });
+    document.dispatchEvent(event);
+}
+
+// FUNCIÓN PARA ESTADÍSTICAS (si no existe)
+function handleEstadisticasAction(actionId) {
+    const event = new CustomEvent('estadisticasNavAction', { 
+        detail: { action: actionId } 
+    });
+    document.dispatchEvent(event);
 }
 
 function handleLigasAction(actionId) {

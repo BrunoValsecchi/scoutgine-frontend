@@ -1,43 +1,59 @@
+// Evitar redeclaración
 if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
     window.EstadisticaJugadorLoaded = true;
+    
+    console.log('📊 EstadisticaJugador - VERSIÓN LIMPIA Y FUNCIONAL');
 
-    // --- Radar Chart (ECharts) ---
-    function cargarRadarJugador(grupo = 'ofensivos', posicion = null) {
+    // ✅ FUNCIÓN PARA CARGAR RADAR DE JUGADOR
+    function cargarRadarJugador(grupo = 'defensivos', posicion = null) {
         const radarContainer = document.getElementById('radar-jugador-chart-container');
-        if (!radarContainer || !window.jugadorData?.jugadorId) return;
+        if (!radarContainer) {
+            console.error('❌ Contenedor radar no encontrado');
+            return;
+        }
+        
+        const jugadorId = window.jugadorData?.jugadorId;
+        if (!jugadorId) {
+            console.error('❌ No hay jugadorId');
+            radarContainer.innerHTML = '<div style="color:#ff6b6b;text-align:center;">No hay ID de jugador</div>';
+            return;
+        }
+        
+        console.log(`🔍 Cargando radar: jugador=${jugadorId}, grupo=${grupo}, posicion=${posicion}`);
+        
         radarContainer.style.width = '100%';
-        radarContainer.style.maxWidth = '600px';
-        radarContainer.style.height = '620px';
-        radarContainer.style.margin = '0 auto';
+        radarContainer.style.height = '500px';
 
-        let url = `https://scoutgine-backend.onrender.com/ajax/radar-jugador/?jugador_id=${window.jugadorData.jugadorId}&grupo=${grupo}`;
+        let url = `${API_CONFIG.BASE_URL}/ajax/radar-jugador/?jugador_id=${jugadorId}&grupo=${grupo}`;
         if (posicion) url += `&posicion=${encodeURIComponent(posicion)}`;
 
         fetch(url)
             .then(resp => resp.json())
             .then(data => {
-                // Si el jugador tiene varias posiciones, muestra el selector
-                if (data.posiciones_jugador && data.posiciones_jugador.length > 1) {
-                    const selector = document.getElementById('posicion-jugador-selector');
-                    selector.style.display = '';
-                    selector.innerHTML = '';
-                    data.posiciones_jugador.forEach(pos => {
-                        const opt = document.createElement('option');
-                        opt.value = pos;
-                        opt.textContent = pos;
-                        if (pos === data.posicion) opt.selected = true;
-                        selector.appendChild(opt);
-                    });
-                    selector.onchange = function() {
-                        cargarRadarJugador(grupo, this.value);
-                    };
-                } else {
-                    document.getElementById('posicion-jugador-selector').style.display = 'none';
+                console.log('📊 Datos radar:', data);
+                
+                if (!data.success) {
+                    radarContainer.innerHTML = `<div style="color:#ff6b6b;text-align:center;">${data.error}</div>`;
+                    return;
                 }
 
-                // Dibuja el radar con ECharts
-                const radarChart = echarts.init(radarContainer, null, {devicePixelRatio: 2});
-                radarChart.setOption({
+                // Actualizar selector de posición si hay múltiples posiciones
+                if (data.posiciones_jugador && data.posiciones_jugador.length > 0) {
+                    actualizarSelectorPosicion('posicion-radar-selector', data.posiciones_jugador, data.posicion, () => {
+                        const nuevaPosicion = document.getElementById('posicion-radar-selector').value;
+                        cargarRadarJugador(grupo, nuevaPosicion);
+                    });
+                }
+
+                // Destruir gráfico anterior
+                if (window.radarJugadorChart) {
+                    window.radarJugadorChart.dispose();
+                }
+
+                // Crear nuevo gráfico
+                window.radarJugadorChart = echarts.init(radarContainer, null, {devicePixelRatio: 2});
+                
+                const option = {
                     backgroundColor: 'transparent',
                     tooltip: {trigger: 'item'},
                     legend: {
@@ -53,6 +69,7 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
                             color: '#00d4ff',
                             fontSize: 13,
                             formatter: function(value) {
+                                // Dividir texto largo en múltiples líneas
                                 const palabras = value.split(' ');
                                 let linea = '';
                                 let resultado = '';
@@ -78,395 +95,409 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
                         symbolSize: 6,
                         lineStyle: {width: 2}
                     }]
-                });
+                };
+
+                window.radarJugadorChart.setOption(option);
+                console.log('✅ Radar renderizado');
             })
-            .catch(() => {
+            .catch(err => {
+                console.error('❌ Error radar:', err);
                 radarContainer.innerHTML = '<div style="color:#ff6b6b;text-align:center;">Error al cargar radar</div>';
             });
     }
 
-    function cargarGraficoDispersionJugador(statX, statY, posicion) {
-        console.log('Cargando gráfico con:', {statX, statY, posicion});
-        
-        const chartContainer = document.getElementById('chart-dispersion-jugador');
-        if (!chartContainer) {
-            console.error('No se encontró el contenedor del gráfico');
-            return;
-        }
-        
-        chartContainer.style.width = '100%';
-        chartContainer.style.height = '600px';
-        chartContainer.innerHTML = 'Cargando...';
-
-        let url = `https://scoutgine-backend.onrender.com/ajax/grafico-dispersion-jugador/?stat_x=${statX}&posicion=${encodeURIComponent(posicion)}`;
-        if (statY) url += `&stat_y=${statY}`;
-        if (window.jugadorData?.jugadorId) url += `&jugador_id=${window.jugadorData.jugadorId}`;
-
-        fetch(url)
-            .then(resp => {
-                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                return resp.json();
-            })
-            .then(data => {
-                if (!data.success) {
-                    chartContainer.innerHTML = `<div style="color:#ff6b6b;text-align:center;">Error: ${data.error}</div>`;
-                    return;
-                }
-
-                // Actualizar selector de estadística Y
-                const statYSelector = document.getElementById('stat-y-selector');
-                if (statYSelector) {
-                    statYSelector.innerHTML = '';
-                    data.campos_y.forEach(campo => {
-                        const option = document.createElement('option');
-                        option.value = campo;
-                        option.textContent = campo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        if (campo === data.stat_y) option.selected = true;
-                        statYSelector.appendChild(option);
-                    });
-                }
-
-                // Crear el gráfico con ECharts
-                if (window.dispersionJugadorChart) {
-                    window.dispersionJugadorChart.dispose();
-                }
-
-                window.dispersionJugadorChart = echarts.init(chartContainer, 'dark', {
-                    devicePixelRatio: 2
-                });
-
-                const scatterData = data.data.map(j => [j.x, j.y, j.nombre]);
-                const jugadorActual = data.jugador_actual;
-
-                const option = {
-                    backgroundColor: '#181b23',
-                    title: {
-                        text: `${data.stat_x.replace(/_/g, ' ')} vs ${data.stat_y.replace(/_/g, ' ')}`,
-                        left: 'center',
-                        top: 20,
-                        textStyle: {
-                            color: '#fff',
-                            fontSize: 26,
-                            fontWeight: 600,
-                            fontFamily: 'Inter, Arial, sans-serif'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        backgroundColor: '#23243a',
-                        borderColor: '#67aaff',
-                        borderWidth: 2,
-                        textStyle: { color: '#fff', fontSize: 16 },
-                        formatter: params => {
-                            const isCurrent = jugadorActual && params.data[2] === jugadorActual.nombre;
-                            return `
-                                <div style="font-size:17px;font-weight:bold;color:${isCurrent ? '#FFD700' : '#67aaff'};margin-bottom:6px;">
-                                    ${isCurrent ? '⭐ ' : ''}${params.data[2]}
-                                </div>
-                                <div>${data.stat_x.replace(/_/g, ' ')}: <b>${params.data[0]}</b></div>
-                                <div>${data.stat_y.replace(/_/g, ' ')}: <b>${params.data[1]}</b></div>
-                            `;
-                        }
-                    },
-                    grid: {
-                        left: 80,
-                        right: 40,
-                        top: 80,
-                        bottom: 60,
-                        containLabel: true
-                    },
-                    xAxis: {
-                        type: 'value',
-                        name: data.stat_x.replace(/_/g, ' '),
-                        nameLocation: 'middle',
-                        nameGap: 40,
-                        nameTextStyle: { color: '#fff', fontSize: 18, fontWeight: 600 },
-                        axisLabel: { color: '#b0b8c9', fontSize: 15 },
-                        axisLine: { lineStyle: { color: '#67aaff', width: 2 } },
-                        splitLine: { lineStyle: { color: '#23243a', type: 'dashed' } }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: data.stat_y.replace(/_/g, ' '),
-                        nameLocation: 'middle',
-                        nameGap: 60,
-                        nameTextStyle: { color: '#fff', fontSize: 18, fontWeight: 600 },
-                        axisLabel: { color: '#b0b8c9', fontSize: 15 },
-                        axisLine: { lineStyle: { color: '#67aaff', width: 2 } },
-                        splitLine: { lineStyle: { color: '#23243a', type: 'dashed' } }
-                    },
-                    series: [{
-                        type: 'scatter',
-                        data: scatterData,
-                        symbolSize: function(data) {
-                            const nombre = data[2];
-                            return jugadorActual && nombre === jugadorActual.nombre ? 28 : 18;
-                        },
-                        itemStyle: {
-                            color: function(params) {
-                                const nombre = params.data[2];
-                                if (jugadorActual && nombre === jugadorActual.nombre) {
-                                    return '#FFD700';
-                                }
-                                return '#67aaff';
-                            },
-                            borderColor: '#fff',
-                            borderWidth: 2,
-                            opacity: 0.85,
-                            shadowBlur: 10,
-                            shadowColor: 'rgba(103,170,255,0.3)'
-                        },
-                        emphasis: {
-                            itemStyle: {
-                                borderColor: '#FFD700',
-                                borderWidth: 3,
-                                opacity: 1,
-                                shadowBlur: 20,
-                                shadowColor: '#FFD700'
-                            }
-                        }
-                    }]
-                };
-
-                window.dispersionJugadorChart.setOption(option);
-            })
-            .catch(err => {
-                console.error('Error al cargar gráfico de dispersión:', err);
-                chartContainer.innerHTML = '<div style="color:#ff6b6b;text-align:center;">Error al cargar el gráfico</div>';
-            });
-    }
-
+    // ✅ FUNCIÓN PARA CARGAR BOXPLOT DE JUGADOR
     function cargarBoxplotJugador(estadistica, posicion) {
         const boxplotContainer = document.getElementById('boxplot-jugador-chart-container');
-        if (!boxplotContainer || !window.jugadorData?.jugadorId) return;
-        
-        boxplotContainer.style.width = '100%';
-        boxplotContainer.style.height = '350px';
-        boxplotContainer.innerHTML = 'Cargando...';
+        if (!boxplotContainer) {
+            console.error('❌ Contenedor boxplot no encontrado');
+            return;
+        }
 
-        let url = `https://scoutgine-backend.onrender.com/ajax/boxplot-jugador/?jugador_id=${window.jugadorData.jugadorId}&estadistica=${encodeURIComponent(estadistica)}`;
+        const jugadorId = window.jugadorData?.jugadorId;
+        if (!jugadorId || !estadistica) {
+            console.error('❌ Faltan datos para boxplot');
+            return;
+        }
+
+        console.log(`🔍 Cargando boxplot: jugador=${jugadorId}, estadistica=${estadistica}, posicion=${posicion}`);
+
+        const statKey = obtenerStatDeURL(estadistica);
+        boxplotContainer.style.width = '100%';
+        boxplotContainer.style.height = '400px';
+        boxplotContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">⏳ Cargando boxplot...</div>';
+
+        let url = `${API_CONFIG.BASE_URL}/ajax/boxplot-jugador/?jugador_id=${jugadorId}&estadistica=${encodeURIComponent(statKey)}`;
         if (posicion) url += `&posicion=${encodeURIComponent(posicion)}`;
 
         fetch(url)
             .then(resp => resp.json())
             .then(data => {
+                console.log('📊 Datos boxplot:', data);
+
                 if (!data.success) {
                     boxplotContainer.innerHTML = `<div style="color:#ff6b6b;text-align:center;">${data.error}</div>`;
                     return;
                 }
 
-                // Crear el boxplot con ECharts
+                // Destruir gráfico anterior
                 if (window.boxplotJugadorChart) {
                     window.boxplotJugadorChart.dispose();
                 }
 
-                window.boxplotJugadorChart = echarts.init(boxplotContainer, 'dark', {
-                    devicePixelRatio: 2
-                });
+                // Crear nuevo gráfico
+                window.boxplotJugadorChart = echarts.init(boxplotContainer, null, {devicePixelRatio: 2});
 
                 const option = {
                     backgroundColor: 'transparent',
                     title: {
-                        text: `Distribución de ${data.stat} (${data.posicion})`,
+                        text: `${data.stat} (${data.posicion})`,
                         left: 'center',
-                        textStyle: { color: '#00d4ff', fontSize: 18, fontWeight: 600 }
+                        textStyle: { color: '#00d4ff', fontSize: 16 }
                     },
                     tooltip: {
                         trigger: 'item',
-                        backgroundColor: '#23243a',
-                        borderColor: '#67aaff',
-                        borderWidth: 2,
-                        textStyle: { color: '#fff', fontSize: 14 },
                         formatter: function (param) {
                             if (param.seriesType === 'boxplot') {
                                 return `
-                                    <div><b>Estadística:</b> ${data.stat}</div>
-                                    <div><b>Mínimo:</b> ${param.data[1]}</div>
-                                    <div><b>Q1:</b> ${param.data[2]}</div>
-                                    <div><b>Mediana:</b> ${param.data[3]}</div>
-                                    <div><b>Q3:</b> ${param.data[4]}</div>
-                                    <div><b>Máximo:</b> ${param.data[5]}</div>
-                                    <div><b>Total jugadores:</b> ${data.total_jugadores}</div>
+                                    <b>Estadística:</b> ${data.stat}<br>
+                                    <b>Mínimo:</b> ${param.data[1]}<br>
+                                    <b>Q1:</b> ${param.data[2]}<br>
+                                    <b>Mediana:</b> ${param.data[3]}<br>
+                                    <b>Q3:</b> ${param.data[4]}<br>
+                                    <b>Máximo:</b> ${param.data[5]}<br>
+                                    <b>Total jugadores:</b> ${data.total_jugadores}
                                 `;
                             } else if (param.seriesType === 'scatter') {
-                                return `<div><b>${data.jugador_nombre}:</b> ${param.data[0]}</div>`;
+                                return `<b>${data.jugador_nombre}:</b> ${param.data[0]}`;
                             }
                         }
                     },
-                    grid: { top: 80, bottom: 60, left: 80, right: 40, containLabel: true },
+                    grid: { top: 80, bottom: 60, left: 80, right: 40 },
                     xAxis: {
                         type: 'value',
                         name: data.stat,
-                        nameLocation: 'middle',
-                        nameGap: 40,
-                        nameTextStyle: { color: '#fff', fontSize: 16, fontWeight: 600 },
-                        axisLabel: { color: '#b0b8c9', fontSize: 15 },
-                        axisLine: { lineStyle: { color: '#67aaff', width: 2 } },
-                        splitLine: { lineStyle: { color: '#23243a', type: 'dashed' } }
+                        axisLabel: { color: '#b0b8c9' },
+                        axisLine: { lineStyle: { color: '#67aaff' } }
                     },
                     yAxis: {
                         type: 'category',
                         data: [''],
-                        axisLabel: { color: '#fff', fontSize: 16 },
-                        axisLine: { lineStyle: { color: '#67aaff', width: 2 } }
+                        axisLabel: { color: '#fff' }
                     },
                     series: [
                         {
-                            name: 'Distribución',
                             type: 'boxplot',
                             data: [data.box],
-                            itemStyle: { color: '#00d4ff', borderColor: '#fff' }
+                            itemStyle: { color: '#00d4ff' }
                         },
-                        // Solo agregar el punto del jugador si tiene valor
                         ...(data.valor_jugador !== null && !isNaN(data.valor_jugador) ? [{
-                            name: data.jugador_nombre,
                             type: 'scatter',
                             data: [[data.valor_jugador, 0]],
                             symbolSize: 18,
-                            itemStyle: { 
-                                color: '#FFD700', 
-                                borderColor: '#fff', 
-                                borderWidth: 2 
-                            },
-                            tooltip: { 
-                                formatter: `${data.jugador_nombre}: ${data.valor_jugador}` 
-                            }
+                            itemStyle: { color: '#FFD700', borderColor: '#fff', borderWidth: 2 }
                         }] : [])
                     ]
                 };
 
                 window.boxplotJugadorChart.setOption(option);
+                console.log('✅ Boxplot renderizado');
             })
             .catch(err => {
-                console.error('Error al cargar boxplot:', err);
-                boxplotContainer.innerHTML = '<div style="color:#ff6b6b;text-align:center;">Error al cargar el boxplot</div>';
+                console.error('❌ Error boxplot:', err);
+                boxplotContainer.innerHTML = '<div style="color:#ff6b6b;">Error al cargar boxplot</div>';
             });
     }
 
-    function obtenerStatDeURL() {
-        const estadistica = window.jugadorData?.estadistica;
-        if (!estadistica) return 'goals';
-        
-        const mapeo = {
-            'Goles': 'goals',
-            'Goles esperados (xG)': 'expected_goals_xg',
-            'Tiros al arco': 'shots_on_target',
-            'Tiros totales': 'shots',
-            'Asistencias': 'assists',
-            'Penales a favor': 'penalties_awarded',
-            'Ocasiones claras falladas': 'big_chances_missed',
-            'Goles concedidos': 'goals_conceded',
-            'Vallas invictas': 'clean_sheets',
-            'xG concedido': 'expected_goals_conceded_xgc',
-            'Entradas exitosas': 'tackles_won',
-            'Intercepciones': 'interceptions',
-            'Despejes': 'blocked',
-            'Recuperaciones último tercio': 'recoveries',
-            'Atajadas': 'saves',
-            'Pases precisos por partido': 'successful_passes',
-            'Precisión de pases': 'pass_accuracy_outfield',
-            'Pases largos precisos': 'accurate_long_balls_outfield',
-            'Centros precisos': 'successful_crosses',
-            'Ocasiones creadas': 'chances_created',
-            'Toques en área rival': 'touches_in_opposition_box',
-            'Tiros de esquina': 'corners_taken',
-            'Rating': 'average_rating',
-            'Partidos jugados': 'appearances',
-            'Minutos jugados': 'minutes_played',
-            'Posesión promedio': 'possession_percentage',
-            'Toques totales': 'touches',
-            'Duelos ganados': 'duels_won_percentage',
-            'Duelos aéreos ganados': 'aerial_duels_won_percentage',
-            'Faltas por partido': 'fouls_committed',
-            'Tarjetas amarillas': 'yellow_cards',
-            'Tarjetas rojas': 'red_cards'
-        };
-        
-        return mapeo[estadistica] || 'goals';
+    // ✅ FUNCIÓN PARA CARGAR GRÁFICO DE DISPERSIÓN - SOLO UNA IMPLEMENTACIÓN
+    function cargarGraficoDispersionJugador(statX = 'pass_accuracy_outfield', statY = 'saves', posicion = 'CB') {
+        const chartContainer = document.getElementById('chart-dispersion-jugador');
+        if (!chartContainer) {
+            console.error('❌ Contenedor dispersión no encontrado');
+            return;
+        }
+
+        const jugadorId = window.jugadorData?.jugadorId;
+        if (!jugadorId) {
+            console.error('❌ No hay jugadorId');
+            return;
+        }
+
+        console.log(`🔍 Cargando dispersión: ${statX} vs ${statY} (${posicion})`);
+
+        chartContainer.style.width = '100%';
+        chartContainer.style.height = '500px';
+        chartContainer.innerHTML = '<div style="text-align:center;padding:50px;color:#666;">⏳ Cargando dispersión...</div>';
+
+        let url = `${API_CONFIG.BASE_URL}/ajax/grafico-dispersion-jugador/?stat_x=${encodeURIComponent(statX)}&posicion=${encodeURIComponent(posicion)}&jugador_id=${jugadorId}`;
+        if (statY) url += `&stat_y=${encodeURIComponent(statY)}`;
+
+        fetch(url)
+            .then(resp => resp.json())
+            .then(data => {
+                console.log('📊 Datos dispersión:', data);
+
+                if (!data.success) {
+                    chartContainer.innerHTML = `<div style="color:#ff6b6b;text-align:center;">${data.error}</div>`;
+                    return;
+                }
+
+                // Actualizar selector Y si hay opciones
+                if (data.opciones_y) {
+                    actualizarSelectorEjeY(data.opciones_y, data.stat_y, posicion, statX);
+                }
+
+                // Renderizar gráfico
+                renderizarDispersionECharts(data, chartContainer);
+            })
+            .catch(error => {
+                console.error('❌ Error dispersión:', error);
+                chartContainer.innerHTML = '<div style="color:#ff6b6b;">Error de conexión</div>';
+            });
     }
 
-    // UN SOLO DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Inicializando estadística jugador...');
+    // ✅ FUNCIÓN PARA RENDERIZAR DISPERSIÓN CON ECHARTS
+    function renderizarDispersionECharts(data, container) {
+        // Destruir gráfico anterior
+        if (window.dispersionJugadorChart) {
+            window.dispersionJugadorChart.dispose();
+        }
 
-        // 1. Cargar radar
-        cargarRadarJugador('ofensivos');
-        const radarGroupSel = document.getElementById('radar-jugador-group-selector');
-        if (radarGroupSel) {
-            radarGroupSel.addEventListener('change', function() {
-                const pos = document.getElementById('posicion-jugador-selector').value || null;
-                cargarRadarJugador(this.value, pos);
+        // Crear nuevo gráfico
+        window.dispersionJugadorChart = echarts.init(container, null, {devicePixelRatio: 2});
+
+        const jugadorActualId = data.jugador_actual?.jugador_id;
+        const otrosJugadores = data.data.filter(p => p.jugador_id !== jugadorActualId);
+        const jugadorActual = data.data.filter(p => p.jugador_id === jugadorActualId);
+
+        const option = {
+            backgroundColor: 'transparent',
+            title: {
+                text: `${data.stat_x.replace(/_/g, ' ')} vs ${data.stat_y.replace(/_/g, ' ')}`,
+                left: 'center',
+                textStyle: { color: '#00d4ff', fontSize: 16 }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function(param) {
+                    return `
+                        <b>${param.data.nombre}</b><br>
+                        ${data.stat_x}: ${param.data.value[0]}<br>
+                        ${data.stat_y}: ${param.data.value[1]}
+                    `;
+                }
+            },
+            grid: { top: 80, bottom: 60, left: 80, right: 40 },
+            xAxis: {
+                type: 'value',
+                name: data.stat_x.replace(/_/g, ' '),
+                axisLabel: { color: '#b0b8c9' },
+                axisLine: { lineStyle: { color: '#67aaff' } }
+            },
+            yAxis: {
+                type: 'value',
+                name: data.stat_y.replace(/_/g, ' '),
+                axisLabel: { color: '#b0b8c9' },
+                axisLine: { lineStyle: { color: '#67aaff' } }
+            },
+            series: [
+                {
+                    type: 'scatter',
+                    data: otrosJugadores.map(p => ({
+                        value: [p.x, p.y],
+                        nombre: p.nombre
+                    })),
+                    symbolSize: 6,
+                    itemStyle: { color: 'rgba(54, 162, 235, 0.6)' }
+                },
+                ...(jugadorActual.length > 0 ? [{
+                    type: 'scatter',
+                    data: jugadorActual.map(p => ({
+                        value: [p.x, p.y],
+                        nombre: p.nombre
+                    })),
+                    symbolSize: 12,
+                    itemStyle: { color: '#FFD700', borderColor: '#fff', borderWidth: 2 }
+                }] : [])
+            ]
+        };
+
+        window.dispersionJugadorChart.setOption(option);
+        console.log('✅ Dispersión renderizada');
+    }
+
+    // ✅ FUNCIÓN PARA ACTUALIZAR SELECTOR DEL EJE Y
+    function actualizarSelectorEjeY(opciones, statYActual, posicion, statX) {
+        const selector = document.getElementById('stat-y-selector');
+        if (!selector) {
+            console.log('ℹ️ Selector stat-y-selector no encontrado');
+            return;
+        }
+
+        selector.innerHTML = '<option value="">Seleccionar estadística...</option>';
+        
+        opciones.forEach(opcion => {
+            const option = document.createElement('option');
+            option.value = opcion.value;
+            option.textContent = opcion.label;
+            if (opcion.value === statYActual) option.selected = true;
+            selector.appendChild(option);
+        });
+
+        // Remover listener anterior y agregar nuevo
+        selector.onchange = function() {
+            if (this.value) {
+                console.log('🔄 Cambiando eje Y a:', this.value);
+                cargarGraficoDispersionJugador(statX, this.value, posicion);
+            }
+        };
+
+        console.log('✅ Selector Y actualizado');
+    }
+
+    // ✅ FUNCIÓN PARA ACTUALIZAR SELECTOR DE POSICIÓN
+    function actualizarSelectorPosicion(selectorId, posiciones, posicionActual, callback) {
+        const selector = document.getElementById(selectorId);
+        if (!selector) return; // <--- QUITA el chequeo de posiciones.length <= 1
+
+        selector.innerHTML = '';
+        posiciones.forEach(pos => {
+            const option = document.createElement('option');
+            option.value = pos;
+            option.textContent = pos;
+            if (pos === posicionActual) option.selected = true;
+            selector.appendChild(option);
+        });
+
+        selector.onchange = callback;
+        selector.style.display = '';
+    }
+
+    // ✅ MAPEO DE ESTADÍSTICAS
+    function obtenerStatDeURL(nombreEstadistica) {
+        const mapeo = {
+            'Precisión de pases': 'pass_accuracy_outfield',
+            'Goles': 'goals',
+            'Asistencias': 'assists',
+            'Intercepciones': 'interceptions',
+            'Entradas exitosos': 'tackles_won',
+            'Atajadas': 'saves',
+            'Tiros al arco': 'shots_on_target',
+            'Rating': 'average_rating',
+            'Partidos jugados': 'appearances',
+            'Minutos jugados': 'minutes_played'
+        };
+        return mapeo[nombreEstadistica] || 'pass_accuracy_outfield';
+    }
+
+    // ✅ ACTUALIZAR HERO STATS
+    async function actualizarHeroStats(jugadorId, estadistica) {
+        try {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/ajax/jugador/${jugadorId}/estadistica/${encodeURIComponent(estadistica)}/`);
+            const data = await response.json();
+            
+            if (data.estadisticas_hero) {
+                const actualEl = document.getElementById('stat-value-actual');
+                const promedioEl = document.getElementById('stat-value-promedio');
+                const percentilEl = document.getElementById('stat-value-percentil');
+                
+                if (actualEl) actualEl.textContent = data.estadisticas_hero.valor_actual || 'N/A';
+                if (promedioEl) promedioEl.textContent = data.estadisticas_hero.promedio_liga || 'N/A';
+                if (percentilEl && data.estadisticas_hero.percentil !== null) {
+                    percentilEl.textContent = `${data.estadisticas_hero.percentil}%`;
+                }
+            }
+        } catch (error) {
+            console.error('Error actualizando hero stats:', error);
+        }
+    }
+
+    // ✅ FUNCIÓN PARA ACTUALIZAR TODOS LOS GRÁFICOS
+    async function actualizarTodosLosGraficos(statKey, statName) {
+        const jugadorId = window.jugadorData.jugadorId;
+        
+        try {
+            console.log(`🔄 Actualizando gráficos: ${statName} (${statKey})`);
+            
+            // Actualizar hero stats
+            await actualizarHeroStats(jugadorId, statName);
+            
+            // Actualizar boxplot
+            const posicionBoxplot = document.getElementById('posicion-boxplot-selector')?.value || 'CB';
+            cargarBoxplotJugador(statName, posicionBoxplot);
+            
+            // Actualizar dispersión
+            const posicionDispersion = document.getElementById('posicion-dispersion-selector')?.value || 'CB';
+            cargarGraficoDispersionJugador(statKey, null, posicionDispersion);
+            
+            // Actualizar título
+            document.title = `${statName} - ${window.jugadorData.jugadorNombre} | ScoutGine`;
+            
+            console.log('✅ Gráficos actualizados');
+            
+        } catch (error) {
+            console.error('❌ Error actualizando:', error);
+        }
+    }
+
+    // ✅ INICIALIZACIÓN - UNA SOLA VEZ
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎯 Inicializando EstadisticaJugador - VERSIÓN LIMPIA');
+
+        // 1. Event listener para selector global de estadísticas
+        const globalStatSelect = document.getElementById('global-stat-select');
+        if (globalStatSelect) {
+            globalStatSelect.addEventListener('change', function() {
+                const nuevaStat = this.value;
+                const nombreStat = this.options[this.selectedIndex].text;
+                
+                window.jugadorData.estadistica = nombreStat;
+                actualizarTodosLosGraficos(nuevaStat, nombreStat);
             });
         }
 
-        // 2. Cargar dispersión
-        fetch(`https://scoutgine-backend.onrender.com/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
-            .then(resp => resp.json())
-            .then(data => {
-                const posiciones = data.posiciones || [];
-                const posicionSelector = document.getElementById('posicion-dispersion-selector');
-                const statYSelector = document.getElementById('stat-y-selector');
-                
-                if (posicionSelector && posiciones.length > 0) {
-                    // Llenar selector de posiciones
-                    posicionSelector.innerHTML = '';
-                    posiciones.forEach(pos => {
-                        const option = document.createElement('option');
-                        option.value = pos;
-                        option.textContent = pos;
-                        posicionSelector.appendChild(option);
-                    });
-
-                    // Cargar gráfico inicial
-                    const statX = obtenerStatDeURL();
-                    cargarGraficoDispersionJugador(statX, null, posiciones[0]);
-
-                    // Eventos ÚNICOS para los selectores
-                    posicionSelector.addEventListener('change', function() {
-                        const statX = obtenerStatDeURL();
-                        const statY = statYSelector ? statYSelector.value : null;
-                        cargarGraficoDispersionJugador(statX, statY, this.value);
-                    });
-
-                    if (statYSelector) {
-                        statYSelector.addEventListener('change', function() {
-                            const statX = obtenerStatDeURL();
-                            const posicion = posicionSelector.value;
-                            cargarGraficoDispersionJugador(statX, this.value, posicion);
-                        });
-                    }
-                }
-            })
-            .catch(err => {
-                console.error('Error cargando posiciones:', err);
+        // 2. Event listener para selector de grupo de radar
+        const radarGroupSelector = document.getElementById('radar-jugador-group-selector');
+        if (radarGroupSelector) {
+            radarGroupSelector.addEventListener('change', function() {
+                const posicion = document.getElementById('posicion-radar-selector')?.value || null;
+                cargarRadarJugador(this.value, posicion);
             });
+        }
 
-        // 3. Cargar boxplot
-        fetch(`https://scoutgine-backend.onrender.com/api/jugador/${window.jugadorData.jugadorId}/posiciones/`)
-            .then(resp => resp.json())
-            .then(data => {
-                const posiciones = data.posiciones || [];
+        // 3. Cargar gráficos iniciales después de un delay
+        setTimeout(() => {
+            if (window.jugadorData?.jugadorId) {
+                const estadisticaInicial = window.jugadorData.estadistica || 'Precisión de pases';
+                const statKey = obtenerStatDeURL(estadisticaInicial);
                 
+                console.log('🚀 Cargando gráficos iniciales...');
+                
+                // Cargar radar
+                cargarRadarJugador('defensivos');
+                
+                // Cargar boxplot y dispersión
+                cargarBoxplotJugador(estadisticaInicial, 'CB');
+                cargarGraficoDispersionJugador(statKey, 'saves', 'CB');
+                
+                // Event listeners para selectores de posición
+                const posicionDispersionSelector = document.getElementById('posicion-dispersion-selector');
+                if (posicionDispersionSelector) {
+                    posicionDispersionSelector.addEventListener('change', function() {
+                        const currentStatKey = obtenerStatDeURL(window.jugadorData.estadistica);
+                        cargarGraficoDispersionJugador(currentStatKey, null, this.value);
+                    });
+                }
+
                 const posicionBoxplotSelector = document.getElementById('posicion-boxplot-selector');
-                if (posicionBoxplotSelector && posiciones.length > 0) {
-                    // Llenar selector de posiciones para boxplot
-                    posicionBoxplotSelector.innerHTML = '';
-                    posiciones.forEach(pos => {
-                        const option = document.createElement('option');
-                        option.value = pos;
-                        option.textContent = pos;
-                        posicionBoxplotSelector.appendChild(option);
-                    });
-
-                    // Cargar boxplot inicial
-                    const estadistica = window.jugadorData.estadistica;
-                    cargarBoxplotJugador(estadistica, posiciones[0]);
-
-                    // Evento para cambio de posición en boxplot
+                if (posicionBoxplotSelector) {
                     posicionBoxplotSelector.addEventListener('change', function() {
-                        cargarBoxplotJugador(estadistica, this.value);
+                        cargarBoxplotJugador(window.jugadorData.estadistica, this.value);
                     });
                 }
-            });
+            }
+        }, 1000);
     });
+
+    console.log('✅ EstadisticaJugador LIMPIO cargado completamente');
 }

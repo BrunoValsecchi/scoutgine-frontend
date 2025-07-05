@@ -13,16 +13,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // ✅ CARGAR TABLAS INMEDIATAMENTE SIN DELAY
     cargarTablas();
     
-    // Escuchar eventos de navegación del topnav
+    // ✅ ESCUCHAR EVENTOS ESPECÍFICOS DE LIGAS
+    document.addEventListener('ligasNavAction', function(e) {
+        const { action } = e.detail;
+        console.log(`🖱️ Navegación en ligas desde topnav: ${action}`);
+        handleLigasNavigation(action);
+    });
+    
+    // ✅ TAMBIÉN ESCUCHAR EL EVENTO GENÉRICO (COMPATIBILIDAD)
     document.addEventListener('navButtonClick', function(e) {
         const { page, button } = e.detail;
         if (page === 'ligas') {
+            console.log(`🖱️ Navegación en ligas (genérico): ${button}`);
             handleLigasNavigation(button);
         }
     });
 });
 
-// ✅ MANEJAR NAVEGACIÓN DE LIGAS
+// ✅ MANEJAR NAVEGACIÓN DE LIGAS - FUNCIÓN YA EXISTENTE
 function handleLigasNavigation(buttonId) {
     console.log(`🖱️ Navegación en ligas: ${buttonId}`);
     
@@ -32,7 +40,9 @@ function handleLigasNavigation(buttonId) {
     switch(buttonId) {
         case 'btn-tablas':
             showSection('tablas-container');
-            cargarTablas();
+            if (!document.getElementById('tablas-content').innerHTML.trim()) {
+                cargarTablas();
+            }
             break;
         case 'btn-stats-equipo':
             showSection('stats-equipos-container');
