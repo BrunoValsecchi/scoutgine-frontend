@@ -16,6 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <!-- Header Landing -->
@@ -72,6 +73,8 @@
                 <li class="headerlan-ul-li"><a class="li-a-header" href="#contacto">Contacto</a></li>
               </ul>
             </div>
+
+            <div class="header-user-info" id="header-user-info"></div>
           </nav>
         </header>
       `;
@@ -99,7 +102,7 @@
                 jugadores y competiciones. Presentamos insights claros, útiles y
                 accesibles para mejorar tu análisis.
               </p>
-              <a href="menu.html" class="cta-button">PLANES</a>
+              <a href="sesion.html" class="cta-button">Inicio Sesion</a>
             </div>
 
             <div class="image-column">
@@ -363,7 +366,7 @@
                 </div>
 
                 <div class="plan-cta">
-                  <a href="menu.html" class="plan-button plan-basic">
+                  <a href="subscripcion.html" class="plan-button plan-basic">
                     <span>Seleccionar Plan</span>
                     <box-icon name="right-arrow-alt" color="#ffffff"></box-icon>
                   </a>
@@ -416,7 +419,7 @@
                 </div>
 
                 <div class="plan-cta">
-                  <a href="menu.html" class="plan-button plan-pro">
+                  <a href="subscripcion.html" class="plan-button plan-pro">
                     <span>Seleccionar Plan</span>
                     <box-icon name="right-arrow-alt" color="#ffffff"></box-icon>
                   </a>
@@ -481,5 +484,45 @@
       console.log('✅ Footer landing cargado');
     }
   </script>
+
+  <script>
+const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+supabase.auth.getSession().then(async ({ data: { session } }) => {
+  const userInfoDiv = document.getElementById('header-user-info');
+  if (!userInfoDiv) return;
+
+  if (session && session.user) {
+    // Puedes usar el email, nombre o lo que guardaste en user_metadata
+    const email = session.user.email;
+    const nombre = session.user.user_metadata?.nombre || '';
+    // Si quieres un avatar, puedes usar la inicial del nombre o un ícono
+    const avatar = nombre
+      ? `<span class="avatar-circle">${nombre[0].toUpperCase()}</span>`
+      : `<i class='bx bx-user-circle' style="font-size:2rem"></i>`;
+
+    userInfoDiv.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${avatar}
+        <span style="font-weight:500">${nombre ? nombre : email}</span>
+        <a href="#" id="logout-btn" style="margin-left:12px;color:#ef4444;font-size:1.2rem;" title="Cerrar sesión"><i class='bx bx-log-out'></i></a>
+      </div>
+    `;
+
+    // Logout handler
+    document.getElementById('logout-btn').onclick = async function(e) {
+      e.preventDefault();
+      await supabase.auth.signOut();
+      window.location.reload();
+    };
+  } else {
+    userInfoDiv.innerHTML = `
+      <a href="sesion.html" class="login-link"><i class='bx bx-log-in'></i> Iniciar sesión</a>
+    `;
+  }
+});
+</script>
 </body>
 </html>

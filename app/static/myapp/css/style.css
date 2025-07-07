@@ -1,4 +1,4 @@
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap');
 
   /* Reset y estilos generales */
   :root {
@@ -1461,4 +1461,17 @@
     margin-right: 0.5rem;
     color: #3498db;
     vertical-align: middle;
-  }  
+  }
+
+  .avatar-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #10b981;
+  color: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}

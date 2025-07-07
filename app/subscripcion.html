@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suscripciones | ScoutGine</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- SDK de Mercado Pago -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    
+    <!-- Protección de autenticación -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    (function() {
+        const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
+        
+        function redirectToLogin() {
+            window.location.href = "sesion.html";
+        }
+        
+        function verificarAuth() {
+            try {
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (!session) {
+                        redirectToLogin();
+                    }
+                }).catch(error => {
+                    redirectToLogin();
+                });
+            } catch (error) {
+                redirectToLogin();
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', verificarAuth);
+        } else {
+            verificarAuth();
+        }
+    })();
+    </script>
+    
+    <link rel="stylesheet" href="static/myapp/css/menu.css">
+    <link rel="stylesheet" href="static/myapp/css/topnav.css">
+    <link rel="stylesheet" href="static/myapp/css/subscripcion.css">
+    
+</head>
+
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+            <p style="color: #cbd5e1; margin-top: 1rem;">Procesando pago...</p>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="subscription-container">
+            <!-- Header -->
+            <div class="page-header">
+                <h1><i class='bx bx-crown'></i> Planes de Suscripción</h1>
+                <p>Elige el plan que mejor se adapte a tus necesidades de análisis deportivo</p>
+            </div>
+
+            <!-- Plans Grid -->
+            <div class="plans-grid">
+                <!-- Plan Gratuito -->
+                <div class="plan-card free">
+                    <div class="plan-header">
+                        <i class='bx bx-user'></i>
+                        <h3>Gratuito</h3>
+                        <div class="price">
+                            <span class="amount">$0</span>
+                            <span class="period">/mes</span>
+                        </div>
+                    </div>
+                    <div class="plan-features">
+                        <ul>
+                            <li><i class='bx bx-check'></i> Acceso a ligas</li>
+                            <li><i class='bx bx-check'></i> Acceso a equipos</li>
+                            <li><i class='bx bx-x'></i> Sin acceso a estadísticas avanzadas</li>
+                            <li><i class='bx bx-x'></i> Sin exportar reportes</li>
+                            <li><i class='bx bx-x'></i> Sin análisis personalizados</li>
+                        </ul>
+                    </div>
+                    <button class="plan-btn current" disabled>
+                        <i class='bx bx-check-circle'></i> Plan Actual
+                    </button>
+                </div>
+
+                <!-- Plan Básico (más popular) -->
+                <div class="plan-card basic">
+                    <div class="popular-badge">
+                        <i class='bx bx-star'></i> Más Popular
+                    </div>
+                    <div class="plan-header">
+                        <i class='bx bx-trophy'></i>
+                        <h3>Básico</h3>
+                        <div class="price">
+                            <span class="amount">$5,000</span>
+                            <span class="period">/mes</span>
+                        </div>
+                    </div>
+                    <div class="plan-features">
+                        <ul>
+                            <li><i class='bx bx-check'></i> Acceso total a la plataforma</li>
+                            <li><i class='bx bx-check'></i> Estadísticas avanzadas</li>
+                            <li><i class='bx bx-check'></i> Comparaciones ilimitadas</li>
+                            <li><i class='bx bx-check'></i> Análisis de jugadores y equipos</li>
+                            <li><i class='bx bx-x'></i> Sin PDF de análisis personalizado</li>
+                        </ul>
+                    </div>
+                    <button class="plan-btn" data-plan="basic" data-price="5000" data-title="Plan Básico">
+                        <i class='bx bx-credit-card'></i> Suscribirse
+                    </button>
+                </div>
+
+                <!-- Plan Premium -->
+                <div class="plan-card premium">
+                    <div class="plan-header">
+                        <i class='bx bx-crown'></i>
+                        <h3>Premium</h3>
+                        <div class="price">
+                            <span class="amount">$10.000</span>
+                            <span class="period">/mes</span>
+                        </div>
+                    </div>
+                    <div class="plan-features">
+                        <ul>
+                            <li><i class='bx bx-check'></i> Todo lo del plan Básico</li>
+                            <li><i class='bx bx-check'></i> PDF con estadísticas y análisis de tu equipo favorito</li>
+                        </ul>
+                    </div>
+                    <button class="plan-btn premium-btn" data-plan="premium" data-price="10000" data-title="Plan Premium">
+                        <i class='bx bx-crown'></i> Suscribirse Premium
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payment Section -->
+            <div class="payment-section" id="payment-section">
+                <div class="payment-header">
+                    <h3><i class='bx bx-credit-card'></i> Completar Pago</h3>
+                    <p>Plan seleccionado: <span id="selected-plan">Plan Básico</span></p>
+                    <p>Total: <span id="total-amount">$1,999 ARS</span></p>
+                </div>
+                
+                <!-- Contenedor para el botón de Mercado Pago -->
+                <div id="mercadopago-button"></div>
+                
+                <div class="payment-security">
+                    <p><i class='bx bx-shield-check'></i> Pago 100% seguro con Mercado Pago</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/apiRequest.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/subscripcion.js"></script>
+</body>
+</html>

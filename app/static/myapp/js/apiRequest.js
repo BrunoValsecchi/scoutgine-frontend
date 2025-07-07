@@ -5,18 +5,19 @@
  * @returns {Promise<any>} - Respuesta JSON
  */
 async function apiRequest(endpoint, options = {}) {
-    if (typeof API_CONFIG === 'undefined' || !API_CONFIG.BASE_URL) {
-        throw new Error('API_CONFIG no está definido');
+    const baseUrl = API_CONFIG?.BASE_URL || 'https://scoutgine.onrender.com';
+    const url = baseUrl + endpoint;
+    
+    try {
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('API Request Error:', error);
+        throw error;
     }
-    const url = API_CONFIG.BASE_URL + endpoint;
-    const response = await fetch(url, options);
-    if (!response.ok) {
-        let msg = `Error HTTP ${response.status}`;
-        try {
-            const data = await response.json();
-            msg += data.error ? `: ${data.error}` : '';
-        } catch {}
-        throw new Error(msg);
-    }
-    return response.json();
 }
