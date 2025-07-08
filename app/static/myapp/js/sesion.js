@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: {
                     nombre,
                     apellido,
-                    role: "user" 
+                    role: "user"
                 }
             }
         });
@@ -134,13 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
     googleBtn.addEventListener('click', async () => {
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/menu.html'
+            }
         });
-
         if (error) {
             showError('Error al iniciar sesión con Google: ' + error.message);
-        } else {
-            // Redirige al menú después de iniciar sesión con Google
-            setTimeout(() => window.location.href = 'menu.html', 1200);
         }
     });
 
@@ -148,6 +147,9 @@ document.addEventListener('DOMContentLoaded', function() {
     githubBtn.addEventListener('click', async () => {
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'github',
+            options: {
+                redirectTo: window.location.origin + '/menu.html'
+            }
         });
         if (error) {
             showError('Error al iniciar sesión con GitHub: ' + error.message);
