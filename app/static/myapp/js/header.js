@@ -125,9 +125,7 @@ function getTopNavForPage(pageName) {
     const configs = {
         'ligas': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar ligas..." class="topnav-search-input">
-                </div>
+                
                 <div class="top-nav-actions">
                     <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
                     <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipos</a>
@@ -138,9 +136,7 @@ function getTopNavForPage(pageName) {
         
         'comparacion': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar para comparar..." class="topnav-search-input">
-                </div>
+                
                 <div class="top-nav-actions">
                     <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
                     <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
@@ -150,9 +146,7 @@ function getTopNavForPage(pageName) {
         
         'estadisticas': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar estadísticas..." class="topnav-search-input">
-                </div>
+                
                 <div class="top-nav-actions">
                     <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
                     <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
@@ -163,9 +157,7 @@ function getTopNavForPage(pageName) {
         
         'equipo_detalle': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
-                </div>
+                <
                 <div class="top-nav-actions">
                     <a href="#" id="btn-tablas" class="nav-action-btn active">Información</a>
                     <a href="#" id="btn-stats-equipo" class="nav-action-btn">Plantilla</a>
@@ -176,21 +168,14 @@ function getTopNavForPage(pageName) {
         
         'recomendacion': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
-                </div>
-                <div class="top-nav-actions">
-                    <a href="#" id="btn-recomendacion" class="nav-action-btn active">Búsqueda</a>
-                    <a href="#" id="btn-perfiles" class="nav-action-btn">Perfiles</a>
-                </div>
+                
+                
             </div>
         `,
         
         'menu': `
             <div class="topnav-content">
-                <div class="topnav-searchbar">
-                    <input type="text" placeholder="Buscar..." class="topnav-search-input">
-                </div>
+                
                 <div class="top-nav-actions">
                     <span class="nav-info">Panel de Control</span>
                 </div>
@@ -200,9 +185,7 @@ function getTopNavForPage(pageName) {
 
     return configs[pageName] || `
         <div class="topnav-content">
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar..." class="topnav-search-input">
-            </div>
+            
         </div>
     `;
 }

@@ -1,0 +1,42 @@
+.dashboard-main {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #18181b;
+  color: #fff;
+  border-radius: 12px;
+  padding: 32px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+#admin-users-table h2 {
+  margin-bottom: 1rem;
+}
+#edit-user-form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+#edit-user-form input, #edit-user-form select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #23232b;
+  color: #fff;
+}
+#edit-user-form button {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+#edit-user-form button:hover {
+  background: #388e3c;
+}
+#dashboard-msg {
+  margin-top: 1rem;
+  font-weight: bold;
+}

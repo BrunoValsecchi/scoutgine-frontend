@@ -648,9 +648,7 @@ function getCurrentPageName() {
 function getTopNavForPage(pageName) {
     const topnavConfigs = {
         'ligas': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar..." class="topnav-search-input">
-            </div>
+            <
             <div class="top-nav-actions">
                 <a href="#" id="btn-tablas" class="nav-action-btn active">Tabla</a>
                 <a href="#" id="btn-stats-equipo" class="nav-action-btn">Stats Equipo</a>
@@ -660,9 +658,7 @@ function getTopNavForPage(pageName) {
         
         // ✅ CONFIGURACIÓN PARA EQUIPO DETALLE
         'equipo_detalle': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
-            </div>
+           
             <div class="top-nav-actions">
                 <a href="#" id="btn-tablas" class="nav-action-btn active">Información</a>
                 <a href="#" id="btn-stats-equipo" class="nav-action-btn">Plantilla</a>
@@ -671,21 +667,15 @@ function getTopNavForPage(pageName) {
         `,
         
         'equipo': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar equipos..." class="topnav-search-input">
-            </div>
+            
         `,
         
         'menu': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar..." class="topnav-search-input">
-            </div>
+            
         `,
         
         'comparacion': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar..." class="topnav-search-input">
-            </div>
+            
             <div class="top-nav-actions">
                 <a href="#" id="btn-equipos" class="nav-action-btn active">Equipos</a>
                 <a href="#" id="btn-jugadores" class="nav-action-btn">Jugadores</a>
@@ -693,9 +683,7 @@ function getTopNavForPage(pageName) {
         `,
         
         'jugador_detalle': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar jugador..." class="topnav-search-input">
-            </div>
+            
             <div class="top-nav-actions">
                 <a href="#" id="btn-info" class="nav-action-btn active">Información</a>
                 <a href="#" id="btn-stats" class="nav-action-btn">Estadísticas</a>
@@ -703,16 +691,12 @@ function getTopNavForPage(pageName) {
         `,
         
         'recomendacion': `
-            <div class="topnav-searchbar">
-                <input type="text" placeholder="Buscar jugadores..." class="topnav-search-input">
-            </div>
+            
         `
     };
 
     return topnavConfigs[pageName] || `
-        <div class="topnav-searchbar">
-            <input type="text" placeholder="Buscar..." class="topnav-search-input">
-        </div>
+        
     `;
 }
 
@@ -735,13 +719,7 @@ function initTopNavEvents() {
         }
     });
     
-    // Evento para búsqueda
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('topnav-search-input')) {
-            handleSearch(e.target.value);
-        }
-    });
-}
+    /
 
 function handleNavAction(actionId) {
     const currentPage = getCurrentPageName();
@@ -824,6 +802,111 @@ window.TopNavManager = {
     handleNavAction,
     getCurrentPageName
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdown = document.getElementById('search-results-dropdown');
+    const content = dropdown?.querySelector('.search-results-content');
+    const loading = dropdown?.querySelector('.search-loading');
+    let searchTimeout;
+
+    if (!searchInput || !dropdown || !content || !loading) return;
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        clearTimeout(searchTimeout);
+
+        if (searchTerm.length >= 2) {
+            showSearchLoading(true);
+            searchTimeout = setTimeout(() => {
+                performGlobalSearch(searchTerm);
+            }, 300);
+        } else {
+            hideSearchResults();
+        }
+
+        // Dispara el evento para filtrado local si lo usás en alguna página
+        document.dispatchEvent(new CustomEvent('topNavSearch', {
+            detail: { searchTerm }
+        }));
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.topnav-searchbar')) {
+            hideSearchResults();
+        }
+    });
+
+    async function performGlobalSearch(searchTerm) {
+        try {
+            showSearchLoading(true);
+            // Cambia los endpoints según tu backend
+            const [equipos, jugadores] = await Promise.all([
+                apiRequest(`/ajax/equipos/?search=${encodeURIComponent(searchTerm)}`),
+                apiRequest(`/ajax/jugadores/?search=${encodeURIComponent(searchTerm)}`)
+            ]);
+            showSearchResults(equipos.slice(0, 5), jugadores.slice(0, 5), searchTerm);
+        } catch (error) {
+            showSearchError();
+        } finally {
+            showSearchLoading(false);
+        }
+    }
+
+    function showSearchResults(equipos, jugadores, searchTerm) {
+        let html = '';
+        if (equipos.length > 0) {
+            html += `<div class="search-section"><h4>Equipos</h4>`;
+            html += equipos.map(e => `
+                <div class="search-result-item" onclick="window.location.href='equipo_detalle.html?id=${e.id}'">
+                    <div class="result-logo">
+                        ${e.logo ? `<img src="${e.logo}" alt="${e.nombre}" style="width:30px;height:30px;border-radius:50%;">` : `<div class="result-placeholder">${e.nombre.substring(0,2).toUpperCase()}</div>`}
+                    </div>
+                    <div class="result-info">
+                        <div class="result-name">${e.nombre}</div>
+                        <div class="result-subtitle">${e.liga || ''}</div>
+                    </div>
+                    <i class='bx bx-chevron-right'></i>
+                </div>
+            `).join('');
+            html += `</div>`;
+        }
+        if (jugadores.length > 0) {
+            html += `<div class="search-section"><h4>Jugadores</h4>`;
+            html += jugadores.map(j => `
+                <div class="search-result-item" onclick="window.location.href='jugador_detalle.html?id=${j.id}'">
+                    <div class="result-logo">
+                        ${j.foto ? `<img src="${j.foto}" alt="${j.nombre}" style="width:30px;height:30px;border-radius:50%;">` : `<div class="result-placeholder"><i class='bx bx-user'></i></div>`}
+                    </div>
+                    <div class="result-info">
+                        <div class="result-name">${j.nombre}</div>
+                        <div class="result-subtitle">${j.equipo || ''} • ${j.posicion || ''}</div>
+                    </div>
+                    <i class='bx bx-chevron-right'></i>
+                </div>
+            `).join('');
+            html += `</div>`;
+        }
+        if (equipos.length === 0 && jugadores.length === 0) {
+            html = `<div class="search-no-results"><i class='bx bx-search-alt'></i><p>No se encontraron resultados para "${searchTerm}"</p></div>`;
+        }
+        content.innerHTML = html;
+        dropdown.style.display = 'block';
+    }
+
+    function showSearchLoading(show) {
+        dropdown.style.display = 'block';
+        loading.style.display = show ? 'block' : 'none';
+    }
+
+    function hideSearchResults() {
+        dropdown.style.display = 'none';
+    }
+
+    function showSearchError() {
+        content.innerHTML = `<div class="search-error"><i class='bx bx-error'></i><p>Error al buscar</p></div>`;
+        dropdown.style.display = 'block';
+    }
+});
 
 console.log("=== TOPNAV.JS INICIALIZADO ===");
 

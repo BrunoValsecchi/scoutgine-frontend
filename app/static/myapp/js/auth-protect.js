@@ -123,31 +123,14 @@ async function cambiarPlanUsuario(nuevoPlan) {
  * @param {Array<string>} planesPermitidos - Ejemplo: ['basic', 'premium']
  */
 async function protegerPorPlan(planesPermitidos) {
-    // Espera a que el cliente esté listo
-    await new Promise(resolve => {
-        if (window.supabaseClient) resolve();
-        else {
-            const interval = setInterval(() => {
-                if (window.supabaseClient) {
-                    clearInterval(interval);
-                    resolve();
-                }
-            }, 100);
-        }
-    });
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const user = session?.user;
+    const userPlan = user?.user_metadata?.subscription || 'free';
 
-    // Obtiene la sesión actual
-    const { data: { session }, error } = await window.supabaseClient.auth.getSession();
-    if (error || !session) {
-        window.location.href = 'sesion.html';
-        return;
+    if (!planesPermitidos.includes(userPlan)) {
+        // Redirigir a la página de suscripción
+        window.location.href = '/subscripcion.html';
+        return false;
     }
-    
-    const plan = session.user.user_metadata.subscription || 'free';
-    console.log('🔒 Plan del usuario:', plan, 'Planes permitidos:', planesPermitidos);
-    
-    if (!planesPermitidos.includes(plan)) {
-        alert('❌ No tienes acceso a esta página con tu plan actual: ' + plan);
-        window.location.href = 'menu.html';
-    }
+    return true;
 }

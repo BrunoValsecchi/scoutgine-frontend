@@ -1,9 +1,8 @@
 <div class="topnav" id="topnav">
     <div class="topnav-content">
-        <!-- Searchbar común -->
-        <div class="topnav-searchbar">
-            <input type="text" placeholder="Buscar..." class="topnav-search-input">
-        </div>
+        <!-- Searchbar común con dropdown de resultados -->
+        
+        
 
         <!-- Botones por defecto (Dashboard/Menu) -->
         <div class="top-nav-actions default-actions">
@@ -57,6 +56,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initTopNav();
+    initGlobalSearch();
 });
 
 function initTopNav() {
@@ -85,14 +85,39 @@ function initTopNav() {
         });
     });
 
-    // Event listener para buscador
-    const searchInput = document.querySelector('.topnav-search-input');
+    // Event listener para buscador (modificado)
     if (searchInput) {
+        let searchTimeout;
+        
         searchInput.addEventListener('input', function() {
-            const searchTerm = this.value;
+            const searchTerm = this.value.trim();
+            
+            // Limpiar timeout anterior
+            clearTimeout(searchTimeout);
+            
+            if (searchTerm.length >= 2) {
+                // Mostrar loading
+                showSearchLoading(true);
+                
+                // Buscar después de 300ms de inactividad
+                searchTimeout = setTimeout(() => {
+                    performGlobalSearch(searchTerm);
+                }, 300);
+            } else {
+                hideSearchResults();
+            }
+            
+            // Mantener evento original para páginas específicas
             document.dispatchEvent(new CustomEvent('topNavSearch', {
-                detail: { searchTerm, page: currentPage }
+                detail: { searchTerm, page: getCurrentPageName() }
             }));
+        });
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.topnav-searchbar')) {
+                hideSearchResults();
+            }
         });
     }
 }
@@ -125,7 +150,6 @@ function showTopNavForPage(page) {
 }
 
 function updateSearchPlaceholder(page) {
-    const searchInput = document.querySelector('.topnav-search-input');
     if (!searchInput) return;
     
     const placeholders = {
@@ -146,4 +170,163 @@ function updateSearchPlaceholder(page) {
 window.changeTopNavForPage = function(page) {
     showTopNavForPage(page);
 };
+
+// NUEVA FUNCIÓN: Búsqueda global
+async function performGlobalSearch(searchTerm) {
+    try {
+        showSearchLoading(true);
+        
+        // Realizar búsquedas en paralelo
+        const [equiposData, jugadoresData] = await Promise.all([
+            searchEquipos(searchTerm),
+            searchJugadores(searchTerm)
+        ]);
+        
+        showSearchResults(equiposData, jugadoresData, searchTerm);
+        
+    } catch (error) {
+        console.error('Error en búsqueda global:', error);
+        showSearchError();
+    } finally {
+        showSearchLoading(false);
+    }
+}
+
+// Buscar equipos
+async function searchEquipos(searchTerm) {
+    try {
+        const response = await apiRequest(`/ajax/equipos/?search=${encodeURIComponent(searchTerm)}`);
+        return response.slice(0, 5); // Máximo 5 resultados
+    } catch (error) {
+        console.error('Error buscando equipos:', error);
+        return [];
+    }
+}
+
+// Buscar jugadores
+async function searchJugadores(searchTerm) {
+    try {
+        const response = await apiRequest(`/ajax/jugadores/?search=${encodeURIComponent(searchTerm)}`);
+        return response.slice(0, 5); // Máximo 5 resultados
+    } catch (error) {
+        console.error('Error buscando jugadores:', error);
+        return [];
+    }
+}
+
+// Mostrar resultados de búsqueda
+function showSearchResults(equipos, jugadores, searchTerm) {
+    const dropdown = document.getElementById('search-results-dropdown');
+    const content = dropdown.querySelector('.search-results-content');
+    
+    let html = '';
+    
+    // Sección de equipos
+    if (equipos.length > 0) {
+        html += `
+            <div class="search-section">
+                <h4><i class='bx bx-shield'></i> Equipos</h4>
+                ${equipos.map(equipo => `
+                    <div class="search-result-item" onclick="goToEquipoDetalle('${equipo.id}')">
+                        <div class="result-logo">
+                            ${equipo.logo 
+                                ? `<img src="${equipo.logo}" alt="${equipo.nombre}" style="width:30px;height:30px;border-radius:50%;">` 
+                                : `<div class="result-placeholder">${equipo.nombre.substring(0, 2).toUpperCase()}</div>`
+                            }
+                        </div>
+                        <div class="result-info">
+                            <div class="result-name">${equipo.nombre}</div>
+                            <div class="result-subtitle">${equipo.liga || 'Liga'}</div>
+                        </div>
+                        <i class='bx bx-chevron-right'></i>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    // Sección de jugadores
+    if (jugadores.length > 0) {
+        html += `
+            <div class="search-section">
+                <h4><i class='bx bx-user'></i> Jugadores</h4>
+                ${jugadores.map(jugador => `
+                    <div class="search-result-item" onclick="goToJugadorDetalle('${jugador.id}')">
+                        <div class="result-logo">
+                            ${jugador.foto 
+                                ? `<img src="${jugador.foto}" alt="${jugador.nombre}" style="width:30px;height:30px;border-radius:50%;">` 
+                                : `<div class="result-placeholder"><i class='bx bx-user'></i></div>`
+                            }
+                        </div>
+                        <div class="result-info">
+                            <div class="result-name">${jugador.nombre}</div>
+                            <div class="result-subtitle">${jugador.equipo || ''} • ${jugador.posicion || ''}</div>
+                        </div>
+                        <i class='bx bx-chevron-right'></i>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    // Si no hay resultados
+    if (equipos.length === 0 && jugadores.length === 0) {
+        html = `
+            <div class="search-no-results">
+                <i class='bx bx-search-alt'></i>
+                <p>No se encontraron resultados para "${searchTerm}"</p>
+            </div>
+        `;
+    }
+    
+    content.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+// Funciones de navegación
+function goToEquipoDetalle(equipoId) {
+    window.location.href = `/equipo_detalle.html?id=${equipoId}`;
+    hideSearchResults();
+}
+
+function goToJugadorDetalle(jugadorId) {
+    window.location.href = `/jugador_detalle.html?id=${jugadorId}`;
+    hideSearchResults();
+}
+
+// Funciones auxiliares
+function showSearchLoading(show) {
+    const dropdown = document.getElementById('search-results-dropdown');
+    const loading = dropdown.querySelector('.search-loading');
+    
+    if (show) {
+        dropdown.style.display = 'block';
+        loading.style.display = 'block';
+    } else {
+        loading.style.display = 'none';
+    }
+}
+
+function hideSearchResults() {
+    const dropdown = document.getElementById('search-results-dropdown');
+    dropdown.style.display = 'none';
+}
+
+function showSearchError() {
+    const dropdown = document.getElementById('search-results-dropdown');
+    const content = dropdown.querySelector('.search-results-content');
+    
+    content.innerHTML = `
+        <div class="search-error">
+            <i class='bx bx-error'></i>
+            <p>Error al realizar la búsqueda</p>
+        </div>
+    `;
+    dropdown.style.display = 'block';
+}
+
+function initGlobalSearch() {
+    // Función de inicialización adicional si es necesaria
+    console.log('🔍 Buscador global inicializado');
+}
 </script>
