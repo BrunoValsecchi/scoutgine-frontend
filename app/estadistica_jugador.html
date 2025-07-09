@@ -158,65 +158,13 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-    // ⚠️ PROTECCIÓN DE AUTENTICACIÓN - NO ELIMINAR
-    (function() {
-        const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9zZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
-        
-        // Función de redirección inmediata
-        function redirectToLogin() {
-            window.location.href = "sesion.html";
-        }
-        
-        // Función de verificación con timeout
-        function verificarAuth() {
-            try {
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                supabase.auth.getSession().then(({ data: { session } }) => {
-                    if (!session) {
-                        console.log('❌ No autenticado - Redirigiendo...');
-                        redirectToLogin();
-                    } else {
-                        console.log('✅ Usuario autenticado');
-                        // Mostrar contenido
-                        document.body.style.visibility = 'visible';
-                    }
-                }).catch(error => {
-                    console.error('Error verificando sesión:', error);
-                    redirectToLogin();
-                });
-            } catch (error) {
-                console.error('Error creando cliente Supabase:', error);
-                redirectToLogin();
-            }
-        }
-        
-        // Ocultar contenido inicialmente
-        document.body.style.visibility = 'hidden';
-        
-        // Verificar cuando el DOM esté listo
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', verificarAuth);
-        } else {
-            verificarAuth();
-        }
-        
-        // Timeout de seguridad: si en 5 segundos no se verifica, redirigir
-        setTimeout(() => {
-            if (document.body.style.visibility === 'hidden') {
-                console.log('⏰ Timeout de verificación - Redirigiendo...');
-                redirectToLogin();
-            }
-        }, 5000);
-    })();
-    </script>
-    
+    <script src="static/myapp/js/auth-protect.js"></script>
+
     <!-- Scripts -->
     <script src="static/myapp/js/config.js"></script>
     <script src="static/myapp/js/header.js"></script>
-    
+    <script src="static/myapp/js/supabase-client.js"></script>
+
     <script>
         // Variables globales
         window.jugadorData = {
@@ -383,6 +331,9 @@
                 console.log('📊 Datos de gráfico disponibles:', window.jugadorData.datosGrafico);
             }
         }
+
+            protegerPorPlan(['basic', 'premium']);
+
     </script>
     
     <!-- Script específico de estadísticas (si existe) -->

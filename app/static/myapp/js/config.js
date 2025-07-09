@@ -30,3 +30,4 @@ console.log('✅ CONFIG.JS INICIALIZADO');
 //         user_email: currentUser.email
 //     })
 // });
+window.BASE_URL = API_CONFIG.BASE_URL;

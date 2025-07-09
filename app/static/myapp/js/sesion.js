@@ -1,219 +1,361 @@
-// Configura tu URL y KEY de Supabase
-const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
+const { createClient } = supabase;
+const supabaseClient = window.supabaseClient;
+window.supabaseClient = supabaseClient;
 
-// ✅ CORREGIR ESTA LÍNEA:
-const { createClient } = supabase;  // ← AGREGAR ESTA LÍNEA
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);  // ← CAMBIAR NOMBRE
+// ✅ NO declarar constantes aquí, usar el cliente global
 
-// Sesión - Funcionalidad de Login/Register
+// ✅ FUNCIÓN PARA LOGIN SOCIAL
+async function signInWithProvider(provider) {
+    try {
+        console.log(`🔄 Iniciando login con ${provider}...`);
+        
+        // ✅ USAR EL CLIENTE GLOBAL
+        if (!window.supabaseClient) {
+            console.error('❌ supabaseClient no está disponible');
+            showMessage('Error: Cliente de autenticación no disponible', 'error');
+            return;
+        }
+        
+        const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: `${window.location.origin}/menu.html`
+            }
+        });
+        
+        if (error) {
+            console.error(`❌ Error con ${provider}:`, error);
+            showMessage(`Error iniciando sesión con ${provider}: ${error.message}`, 'error');
+            return;
+        }
+        
+        console.log(`✅ Redirigiendo a ${provider}...`);
+        
+    } catch (error) {
+        console.error(`❌ Error con ${provider}:`, error);
+        showMessage(`Error iniciando sesión con ${provider}`, 'error');
+    }
+}
+
+// Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const authForms = document.querySelectorAll('.auth-form');
-    const passwordToggles = document.querySelectorAll('.password-toggle');
+    console.log('🎯 Página de sesión cargada');
     
-    // ===== CAMBIO DE TABS =====
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.dataset.tab;
+    // Verificar si el cliente está disponible
+    if (!window.supabaseClient) {
+        console.log('⏳ Esperando a que supabaseClient esté disponible...');
+        
+        // Esperar hasta que esté disponible
+        const checkClient = setInterval(() => {
+            if (window.supabaseClient) {
+                clearInterval(checkClient);
+                console.log('✅ supabaseClient ahora disponible');
+                initializePage();
+            }
+        }, 100);
+        
+        // Timeout después de 5 segundos
+        setTimeout(() => {
+            clearInterval(checkClient);
+            if (!window.supabaseClient) {
+                console.error('❌ supabaseClient no se cargó después de 5 segundos');
+                showMessage('Error cargando sistema de autenticación', 'error');
+            }
+        }, 5000);
+    } else {
+        initializePage();
+    }
+});
+
+function initializePage() {
+    // Configurar navegación entre tabs
+    setupTabNavigation();
+    
+    // Configurar formularios
+    setupForms();
+    
+    // Configurar botones sociales
+    setupSocialButtons();
+    
+    // Configurar otros elementos
+    setupPasswordToggles();
+}
+
+function setupSocialButtons() {
+    // Botones de Google
+    const googleBtns = document.querySelectorAll('.social-btn.google');
+    googleBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔄 Botón Google clickeado');
+            signInWithProvider('google');
+        });
+    });
+    
+    // Botones de GitHub
+    const githubBtns = document.querySelectorAll('.social-btn.github');
+    githubBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔄 Botón GitHub clickeado');
+            signInWithProvider('github');
+        });
+    });
+}
+
+function setupForms() {
+    // Formulario de login
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Cambiar tabs activos
-            tabBtns.forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
             
-            // Cambiar formularios activos
-            authForms.forEach(form => {
+            if (!email || !password) {
+                showMessage('Por favor completa todos los campos', 'error');
+                return;
+            }
+            
+            await signInWithEmail(email, password);
+        });
+    }
+    
+    // Formulario de registro
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nombre = document.getElementById('register-name').value;
+            const apellido = document.getElementById('register-lastname').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const acceptTerms = document.getElementById('accept-terms').checked;
+            
+            // Validaciones
+            if (!nombre || !apellido || !email || !password || !confirmPassword) {
+                showMessage('Por favor completa todos los campos', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('La contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
+            if (!acceptTerms) {
+                showMessage('Debes aceptar los términos y condiciones', 'error');
+                return;
+            }
+            
+            await signUpWithEmail(email, password, nombre, apellido);
+        });
+    }
+}
+
+function setupTabNavigation() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const forms = document.querySelectorAll('.auth-form');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetTab = button.dataset.tab;
+            
+            console.log('🔄 Cambiando a tab:', targetTab);
+            
+            // Actualizar botones activos
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Mostrar formulario correcto
+            forms.forEach(form => {
                 form.classList.remove('active');
-                if (form.id === targetTab + '-form') {
+                if (form.id === `${targetTab}-form`) {
                     form.classList.add('active');
                 }
             });
         });
     });
+}
+
+function setupPasswordToggles() {
+    const toggleButtons = document.querySelectorAll('.password-toggle');
     
-    // ===== TOGGLE DE CONTRASEÑAS =====
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const passwordInput = toggle.previousElementSibling;
-            const icon = toggle.querySelector('i');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const input = button.previousElementSibling;
+            const icon = button.querySelector('i');
             
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.className = 'bx bx-hide';
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bx-show');
+                icon.classList.add('bx-hide');
             } else {
-                passwordInput.type = 'password';
-                icon.className = 'bx bx-show';
+                input.type = 'password';
+                icon.classList.remove('bx-hide');
+                icon.classList.add('bx-show');
             }
         });
     });
-    
-    // ===== VALIDACIÓN DE FORMULARIOS =====
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    
-    loginForm.addEventListener('submit', handleLogin);
-    registerForm.addEventListener('submit', handleRegister);
-    
-    // ===== FUNCIONES DE MANEJO =====
-    async function handleLogin(e) {
-        e.preventDefault();
+}
+
+async function signInWithEmail(email, password) {
+    try {
+        console.log('🔄 Iniciando sesión con email...');
         
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        showLoading(e.target);
-
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });  // ← CAMBIAR AQUÍ
-        hideLoading(e.target);
-
-        if (error) {
-            showError(error.message);
-        } else {
-            showSuccess('¡Bienvenido!');
-            setTimeout(() => window.location.href = 'menu.html', 1200);
-        }
-    }
-    
-    async function handleRegister(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
-        const confirmPassword = document.getElementById('register-confirm-password').value;
-        const nombre = document.getElementById('register-name').value;
-        const apellido = document.getElementById('register-lastname').value;
-
-        if (password !== confirmPassword) {
-            showError('Las contraseñas no coinciden');
+        if (!window.supabaseClient) {
+            console.error('❌ supabaseClient no está disponible');
+            showMessage('Error: Cliente de autenticación no disponible', 'error');
             return;
         }
-        showLoading(e.target);
+        
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (error) {
+            console.error('❌ Error login:', error);
+            showMessage('Error: ' + error.message, 'error');
+            return;
+        }
+        
+        console.log('✅ Login exitoso:', data.user.email);
+        showMessage('¡Login exitoso! Redirigiendo...', 'success');
+        
+        // Verificar y actualizar suscripción
+        const { data: sessionData } = await window.supabaseClient.auth.getSession();
+        const session = sessionData.session;
+        
+        if (session) {
+            // Si no hay suscripción, asignar "free"
+            if (!session.user.user_metadata.subscription) {
+                await window.supabaseClient.auth.updateUser({
+                    data: { subscription: "free" }
+                });
+            }
+        }
+        
+        setTimeout(() => {
+            window.location.href = 'menu.html';
+        }, 1500);
+        
+    } catch (error) {
+        console.error('❌ Error login:', error);
+        showMessage('Error iniciando sesión', 'error');
+    }
+}
 
-        // Registro en Supabase Auth
-        const { data, error } = await supabaseClient.auth.signUp({
-            email,
-            password,
+async function signUpWithEmail(email, password, nombre, apellido) {
+    try {
+        console.log('🔄 Registrando usuario...');
+        
+        if (!window.supabaseClient) {
+            console.error('❌ supabaseClient no está disponible');
+            showMessage('Error: Cliente de autenticación no disponible', 'error');
+            return;
+        }
+        
+        const { data, error } = await window.supabaseClient.auth.signUp({
+            email: email,
+            password: password,
             options: {
                 data: {
-                    nombre,
-                    apellido,
-                    role: "user"
+                    nombre: nombre,
+                    apellido: apellido,
+                    role: "user",
+                    subscription: "free"
                 }
             }
         });
-        hideLoading(e.target);
-
+        
         if (error) {
-            showError(error.message);
+            console.error('❌ Error registro:', error);
+            showMessage('Error: ' + error.message, 'error');
+            return;
+        }
+        
+        if (data.user && !data.user.email_confirmed_at) {
+            showMessage('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.', 'success');
         } else {
-            showSuccess('¡Cuenta creada! Revisa tu email para confirmar.');
-            setTimeout(() => window.location.href = 'menu.html', 1800);
+            showMessage('¡Registro exitoso! Redirigiendo...', 'success');
+            setTimeout(() => {
+                window.location.href = 'menu.html';
+            }, 1500);
         }
-    }
-    
-    // ===== CAMBIO DE FORMULARIO DESDE EL FOOTER ===== 
-    // ← ESTA PARTE DEBE IR AQUÍ, DENTRO DEL DOMContentLoaded
-    document.querySelectorAll('.switch-form-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();  // ← AGREGAR ESTO
-            console.log('Switch button clicked'); // ← DEBUG
-            
-            // Activa el tab de registro
-            const registerTab = document.querySelector('.tab-btn[data-tab="register"]');
-            if (registerTab) {
-                registerTab.click();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        });
-    });
-    
-    // ===== LOGIN SOCIAL =====
-    const googleBtn = document.querySelector('.social-btn.google');
-    const githubBtn = document.querySelector('.social-btn.github');
-
-    // Login con Google
-    googleBtn.addEventListener('click', async () => {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin + '/menu.html'
-            }
-        });
-        if (error) {
-            showError('Error al iniciar sesión con Google: ' + error.message);
-        }
-    });
-
-    // Login con GitHub
-    githubBtn.addEventListener('click', async () => {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-            provider: 'github',
-            options: {
-                redirectTo: window.location.origin + '/menu.html'
-            }
-        });
-        if (error) {
-            showError('Error al iniciar sesión con GitHub: ' + error.message);
-        }
-    });
-    
-    // ===== UTILIDADES =====
-    function showLoading(form) {
-        const submitBtn = form.querySelector('.auth-btn');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Procesando...';
-    }
-    
-    function hideLoading(form) {
-        const submitBtn = form.querySelector('.auth-btn');
-        submitBtn.disabled = false;
         
-        if (form.id === 'login-form') {
-            submitBtn.innerHTML = '<i class="bx bx-log-in"></i> Iniciar Sesión';
-        } else {
-            submitBtn.innerHTML = '<i class="bx bx-user-plus"></i> Crear Cuenta';
-        }
+    } catch (error) {
+        console.error('❌ Error registro:', error);
+        showMessage('Error registrando usuario', 'error');
     }
-    
-    function showError(message) {
-        const toast = createToast(message, 'error');
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-    }
-    
-    function showSuccess(message) {
-        const toast = createToast(message, 'success');
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 4000);
-    }
-    
-    function createToast(message, type) {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            background: ${type === 'error' ? '#ef4444' : '#10b981'};
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 1000;
-            animation: slideInRight 0.3s ease;
-        `;
-        
-        toast.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="bx ${type === 'error' ? 'bx-error' : 'bx-check'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        return toast;
-    }
-});
+}
 
-// ===== CSS ANIMATIONS =====
+function showMessage(message, type = 'info') {
+    // Remover mensaje anterior
+    const existingMessage = document.querySelector('.toast-message');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    const colors = {
+        error: '#ef4444',
+        success: '#10b981',
+        info: '#3b82f6'
+    };
+    
+    const icons = {
+        error: 'bx-error',
+        success: 'bx-check',
+        info: 'bx-info-circle'
+    };
+    
+    // Crear mensaje
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `toast-message toast-${type}`;
+    messageDiv.style.cssText = `
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: ${colors[type]};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        z-index: 3000;
+        animation: slideInRight 0.3s ease;
+        max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    `;
+    
+    messageDiv.innerHTML = `
+        <i class='bx ${icons[type]}'></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Auto-remove
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => messageDiv.remove(), 300);
+        }
+    }, 4000);
+}
+
+// CSS para animaciones
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -224,6 +366,17 @@ style.textContent = `
         to {
             transform: translateX(0);
             opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
         }
     }
 `;

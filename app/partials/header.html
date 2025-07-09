@@ -14,7 +14,7 @@
       <li class="nav-link">
         <a href="menu.html">
           <i class="bx bx-home-alt"></i>
-          <span>Dashboard</span>
+          <span>Inicio</span>
         </a>
       </li>
       
@@ -52,12 +52,25 @@
       
       <!-- Club favorito -->
       <li class="nav-link">
-        <a href="#" onclick="alert('Próximamente - Club favorito')">
+        <a href="favorito.html" ">
           <i class="bx bx-badge-check"></i>
           <span>Club favorito</span>
         </a>
       </li>
     </ul>
+  </div>
+
+  <!-- Información del usuario -->
+  <div class="user-info" id="sidebar-user-info">
+    <!-- Aquí se mostrará el nombre o email -->
+  </div>
+
+  <!-- Botón de cerrar sesión -->
+  <div class="logout-section">
+    <button id="logout-btn" class="logout-btn">
+      <i class="bx bx-log-out"></i>
+      <span>Cerrar sesión</span>
+    </button>
   </div>
 </aside>
 
@@ -181,6 +194,63 @@
 }
 
 .sidebar:hover .menu a span {
+  opacity: 1;
+  visibility: visible;
+}
+
+.user-info {
+  color: white;
+  padding: 15px 20px;
+  font-size: 0.9rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.logout-section {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.logout-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 20px;
+  width: 90%;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #ef4444;
+}
+.sidebar:hover .logout-btn span {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.2s;
+}
+.logout-btn span {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+}
+.sidebar:hover .logout-btn span {
   opacity: 1;
   visibility: visible;
 }

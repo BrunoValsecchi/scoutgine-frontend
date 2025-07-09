@@ -13,38 +13,12 @@
     
     <!-- Protección de autenticación -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-    (function() {
-        const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
-        
-        function redirectToLogin() {
-            window.location.href = "sesion.html";
-        }
-        
-        function verificarAuth() {
-            try {
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                supabase.auth.getSession().then(({ data: { session } }) => {
-                    if (!session) {
-                        redirectToLogin();
-                    }
-                }).catch(error => {
-                    redirectToLogin();
-                });
-            } catch (error) {
-                redirectToLogin();
-            }
-        }
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', verificarAuth);
-        } else {
-            verificarAuth();
-        }
-    })();
-    </script>
-    
+    <script src="static/myapp/js/supabase-client.js"></script>
+    <script src="static/myapp/js/config.js"></script>
+    <script src="static/myapp/js/apiRequest.js"></script>
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/subscripcion.js"></script>
+  
     <link rel="stylesheet" href="static/myapp/css/menu.css">
     <link rel="stylesheet" href="static/myapp/css/topnav.css">
     <link rel="stylesheet" href="static/myapp/css/subscripcion.css">
@@ -174,5 +148,7 @@
     <script src="static/myapp/js/apiRequest.js"></script>
     <script src="static/myapp/js/header.js"></script>
     <script src="static/myapp/js/subscripcion.js"></script>
+    <script src="static/myapp/js/supabase-client.js"></script>
+
 </body>
 </html>

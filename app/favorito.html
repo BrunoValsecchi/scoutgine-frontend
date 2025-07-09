@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Favoritos - Scoutgine</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/myapp/css/favorto.css">
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+    
+    <!-- TopNav Container -->
+    <div id="topnav-container"></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class='bx bx-loader-alt bx-spin'></i>
+            </div>
+            <p>Cargando equipos...</p>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="favoritos-container">
+            <!-- Header -->
+            <div class="page-header">
+                <h1><i class='bx bx-heart'></i> Mi Equipo Favorito</h1>
+                <p>Selecciona tu equipo favorito para personalizar tu experiencia</p>
+            </div>
+
+            <!-- Equipo Actual -->
+            <div class="equipo-actual" id="equipo-actual">
+                <div class="equipo-actual-content">
+                    <div class="equipo-actual-info">
+                        <h3>Equipo Actual</h3>
+                        <div class="equipo-seleccionado" id="equipo-seleccionado">
+                            <div class="sin-equipo">
+                                <i class='bx bx-heart-circle'></i>
+                                <span>No has seleccionado un equipo favorito</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-cambiar" id="btn-cambiar">
+                        <i class='bx bx-edit'></i>
+                        Cambiar Equipo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Título de la lista -->
+            <div class="equipos-titulo">
+                <h2><i class='bx bx-football'></i> Todos los Equipos</h2>
+                <p>Haz clic en un equipo para seleccionarlo como favorito</p>
+            </div>
+
+            <!-- Grid de Equipos -->
+            <div class="equipos-grid" id="equipos-grid">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="static/myapp/js/supabase-client.js"></script>
+    <script src="static/myapp/js/auth-protect.js"></script>
+    <script src="static/myapp/js/config.js"></script>  <!-- DEBE IR ANTES -->
+    <script src="static/myapp/js/header.js"></script>
+    <script src="static/myapp/js/favorito.js"></script>  <!-- DESPUÉS -->
+
+    <script>
+        // Solo pueden entrar usuarios con plan premium
+        protegerPorPlan(['premium']);
+    </script>
+</body>
+</html>

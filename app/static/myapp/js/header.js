@@ -13,6 +13,48 @@ document.addEventListener('DOMContentLoaded', function() {
             loadTopNav();
         }, 300);
     });
+    
+    // Esperar a que el sidebar esté en el DOM
+    setTimeout(() => {
+        console.log('🔍 Buscando botón de logout...');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (logoutBtn) {
+            console.log('✅ Botón de logout encontrado');
+            
+            logoutBtn.addEventListener('click', async function() {
+                console.log('🔴 Botón de logout clickeado');
+                
+                if (window.supabaseClient) {
+                    console.log('✅ supabaseClient disponible');
+                    try {
+                        await window.supabaseClient.auth.signOut();
+                        console.log('✅ Sesión cerrada exitosamente');
+                        window.location.href = 'sesion.html';
+                    } catch (error) {
+                        console.error('❌ Error al cerrar sesión:', error);
+                        alert('Error al cerrar sesión: ' + error.message);
+                    }
+                } else {
+                    console.log('❌ supabaseClient NO disponible');
+                    alert('No se pudo cerrar sesión. Intenta recargar la página.');
+                }
+            });
+        } else {
+            console.log('❌ Botón de logout NO encontrado');
+        }
+    }, 1000); // Aumenta el tiempo a 1 segundo
+
+    // Mostrar botón Dashboard solo si el usuario es admin
+    setTimeout(async () => {
+        if (!window.supabaseClient) return;
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (user && user.user_metadata && user.user_metadata.role === 'admin') {
+            document.querySelectorAll('.admin-only').forEach(el => {
+                el.style.display = '';
+            });
+        }
+    }, 800); // Ajusta el tiempo si el sidebar tarda más en cargar
 });
 
 // ✅ CARGAR SIDEBAR
@@ -325,4 +367,54 @@ function handleEquipoDetalleNavigation(buttonId) {
     }
 }
 
+// Mostrar nombre o email del usuario en el sidebar
+document.addEventListener('DOMContentLoaded', async function() {
+    setTimeout(async () => {
+        if (!window.supabaseClient) return;
+        
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const userInfo = document.getElementById('sidebar-user-info');
+        if (!userInfo) return;
+
+        if (session && session.user) {
+            // Obtener nombre de diferentes fuentes
+            const nombre = session.user.user_metadata?.nombre || 
+                          session.user.user_metadata?.full_name || 
+                          session.user.user_metadata?.name;
+            const email = session.user.email;
+            
+            userInfo.innerHTML = `
+                <div style="color:#fff; font-size:0.95rem; padding:10px 20px; opacity:0.8;">
+                    <i class='bx bx-user'></i>
+                    ${nombre ? nombre : email}
+                </div>
+            `;
+            
+            // Mostrar botón Dashboard solo si es admin
+            if (session.user.user_metadata?.role === 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.style.display = '';
+                });
+            }
+        } else {
+            userInfo.innerHTML = `<div style="color:#fff; font-size:0.95rem; padding:10px 20px; opacity:0.8;">
+                <i class='bx bx-user'></i> Invitado
+            </div>`;
+        }
+    }, 1500); // Aumentar el delay para OAuth
+});
+
 console.log("✅ HEADER.JS INICIALIZADO");
+
+// CSS para animación de íconos en el enlace del dashboard
+const style = document.createElement('style');
+style.innerHTML = `
+.dashboard-link a i {
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+`;
+document.head.appendChild(style);

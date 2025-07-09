@@ -1,9 +1,4 @@
-// Configuración de Supabase
-const SUPABASE_URL = 'https://gvgmhdxarjgvfykoyqyw.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2Z21oZHhhcmpndmZ5a295cXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NjUwMjMsImV4cCI6MjA2NDA0MTAyM30.05_u4LQA-z443z6eeFBBtlluobKLeNSOR25fHcEUpag';
-const { createClient } = supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+const supabaseClient = window.supabaseClient;
 // Configuración de Mercado Pago
 const mp = new MercadoPago('APP_USR-a810083b-a8bd-407c-8862-835c559a95f8', {
     locale: 'es-AR'

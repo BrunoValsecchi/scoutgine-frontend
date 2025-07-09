@@ -1,22 +1,16 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso | ScoutGine</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="static/myapp/css/sesion.css">
 </head>
 <body>
     <div class="auth-container">
-       
-
-        <!-- Panel principal -->
         <div class="auth-panel">
-            <!-- Logo y branding -->
             <div class="auth-header">
                 <div class="logo-container">
                     <i class='bx bx-search-alt-2'></i>
@@ -24,10 +18,7 @@
                 </div>
                 <p class="tagline">Análisis inteligente de fútbol</p>
             </div>
-
-            <!-- Formulario toggle -->
             <div class="form-container">
-                <!-- Tabs para cambiar entre login y registro -->
                 <div class="auth-tabs">
                     <button class="tab-btn active" data-tab="login">
                         <i class='bx bx-log-in'></i>
@@ -38,142 +29,98 @@
                         Registrarse
                     </button>
                 </div>
-
                 <!-- Formulario de Login -->
-                <form class="auth-form active" id="login-form">
-                    <div class="form-group">
-                        <label for="login-email">
-                            <i class='bx bx-envelope'></i>
-                            Email
-                        </label>
-                        <input type="email" id="login-email" required>
+                <form id="login-form" class="auth-form active">
+                    <h2>Iniciar Sesión</h2>
+                    <div class="input-group">
+                        <i class='bx bx-envelope'></i>
+                        <input type="email" id="login-email" placeholder="Email" required>
                     </div>
-
-                    <div class="form-group">
-                        <label for="login-password">
-                            <i class='bx bx-lock-alt'></i>
-                            Contraseña
-                        </label>
-                        <input type="password" id="login-password" required>
+                    <div class="input-group">
+                        <i class='bx bx-lock-alt'></i>
+                        <input type="password" id="login-password" placeholder="Contraseña" required>
                         <button type="button" class="password-toggle">
                             <i class='bx bx-show'></i>
                         </button>
                     </div>
-
-                    <div class="form-options">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="remember-me">
-                            <span class="checkmark"></span>
-                            Recordarme
-                        </label>
-                        <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
-                    </div>
-
                     <button type="submit" class="auth-btn primary">
                         <i class='bx bx-log-in'></i>
                         Iniciar Sesión
                     </button>
+                    <div class="auth-divider">
+                        <span>o continúa con</span>
+                    </div>
+                    <div class="social-login">
+                        <button type="button" class="social-btn google">
+                            <i class='bx bxl-google'></i>
+                            Google
+                        </button>
+                        <button type="button" class="social-btn github">
+                            <i class='bx bxl-github'></i>
+                            GitHub
+                        </button>
+                    </div>
                 </form>
-
                 <!-- Formulario de Registro -->
-                <form class="auth-form" id="register-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="register-name">
-                                <i class='bx bx-user'></i>
-                                Nombre
-                            </label>
-                            <input type="text" id="register-name" required>
+                <form id="register-form" class="auth-form">
+                    <h2>Crear Cuenta</h2>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class='bx bx-user'></i>
+                            <input type="text" id="register-name" placeholder="Nombre" required>
                         </div>
-                        <div class="form-group">
-                            <label for="register-lastname">
-                                <i class='bx bx-user'></i>
-                                Apellido
-                            </label>
-                            <input type="text" id="register-lastname" required>
+                        <div class="input-group">
+                            <i class='bx bx-user'></i>
+                            <input type="text" id="register-lastname" placeholder="Apellido" required>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="register-email">
-                            <i class='bx bx-envelope'></i>
-                            Email
-                        </label>
-                        <input type="email" id="register-email" required>
+                    <div class="input-group">
+                        <i class='bx bx-envelope'></i>
+                        <input type="email" id="register-email" placeholder="Email" required>
                     </div>
-
-                    <div class="form-group">
-                        <label for="register-password">
-                            <i class='bx bx-lock-alt'></i>
-                            Contraseña
-                        </label>
-                        <input type="password" id="register-password" required>
+                    <div class="input-group">
+                        <i class='bx bx-lock-alt'></i>
+                        <input type="password" id="register-password" placeholder="Contraseña" required>
                         <button type="button" class="password-toggle">
                             <i class='bx bx-show'></i>
                         </button>
                     </div>
-
-                    <div class="form-group">
-                        <label for="register-confirm-password">
-                            <i class='bx bx-lock-alt'></i>
-                            Confirmar Contraseña
-                        </label>
-                        <input type="password" id="register-confirm-password" required>
+                    <div class="input-group">
+                        <i class='bx bx-lock-alt'></i>
+                        <input type="password" id="register-confirm-password" placeholder="Confirmar contraseña" required>
+                        <button type="button" class="password-toggle">
+                            <i class='bx bx-show'></i>
+                        </button>
                     </div>
-
-                
-
-                    <div class="form-options">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="accept-terms" required>
-                            <span class="checkmark"></span>
-                            Acepto los <a href="#" class="terms-link">términos y condiciones</a>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="accept-terms" required>
+                        <label for="accept-terms">
+                            Acepto los <a href="#" class="link">términos y condiciones</a>
                         </label>
                     </div>
-
                     <button type="submit" class="auth-btn primary">
                         <i class='bx bx-user-plus'></i>
-                        Crear Cuenta
+                        Crear Cuenta Gratis
                     </button>
+                    <div class="auth-divider">
+                        <span>o continúa con</span>
+                    </div>
+                    <div class="social-login">
+                        <button type="button" class="social-btn google">
+                            <i class='bx bxl-google'></i>
+                            Google
+                        </button>
+                        <button type="button" class="social-btn github">
+                            <i class='bx bxl-github'></i>
+                            GitHub
+                        </button>
+                    </div>
                 </form>
-
-                <!-- Separador -->
-                <div class="auth-divider">
-                    <span>o continúa con</span>
-                </div>
-
-                <!-- Login social -->
-                <div class="social-login">
-                    <button class="social-btn google">
-                        <i class='bx bxl-google'></i>
-                        Google
-                    </button>
-                    <button class="social-btn github">
-                        <i class='bx bxl-github'></i>
-                        GitHub
-                    </button>
-                </div>
-            </div>
-
-            <!-- Footer del panel -->
-            <div class="auth-footer">
-                <p>¿Nuevo en ScoutGine? 
-                    <button class="switch-form-btn" data-target="register">
-                        Crear cuenta gratis
-                    </button>
-                </p>
-                <div class="footer-links">
-                    <a href="index.html">← Volver al inicio</a>
-                    <a href="menu.html">Dashboard</a>
-                </div>
             </div>
         </div>
-
-        <!-- Panel informativo lateral -->
         <div class="info-panel">
             <div class="info-content">
                 <h2>¡Únete a la revolución del análisis deportivo!</h2>
-                
                 <div class="feature-list">
                     <div class="feature-item">
                         <i class='bx bx-bar-chart-alt-2'></i>
@@ -182,7 +129,6 @@
                             <p>Estadísticas profundas de jugadores y equipos</p>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <i class='bx bx-target-lock'></i>
                         <div>
@@ -190,7 +136,6 @@
                             <p>Encuentra talentos ocultos con IA</p>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <i class='bx bx-trending-up'></i>
                         <div>
@@ -198,7 +143,6 @@
                             <p>Modelos predictivos de rendimiento</p>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <i class='bx bx-group'></i>
                         <div>
@@ -207,7 +151,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="stats-showcase">
                     <div class="stat-item">
                         <span class="stat-number">1,500+</span>
@@ -225,8 +168,9 @@
             </div>
         </div>
     </div>
-
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="static/myapp/js/supabase-client.js"></script>
     <script src="static/myapp/js/sesion.js"></script>
 </body>
 </html>
