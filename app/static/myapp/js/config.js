@@ -13,7 +13,8 @@ const API_CONFIG = {
     ENDPOINTS: {
         EQUIPOS: '/ajax/equipos/',
         JUGADORES: '/ajax/jugadores/',
-        RECOMENDAR_JUGADORES: '/ajax/recomendar-jugadores/'
+        RECOMENDAR_JUGADORES: '/ajax/recomendar-jugadores/',
+        ADMIN_USERS: '/ajax/admin/users/' // <--- AGREGA ESTA LÍNEA
     }
 };
 

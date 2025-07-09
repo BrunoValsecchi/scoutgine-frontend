@@ -1463,15 +1463,95 @@
     vertical-align: middle;
   }
 
-  .avatar-circle {
+  /* Avatar visual en header */
+.header-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(16,185,129,0.08);
+  border-radius: 24px;
+  padding: 4px 14px 4px 6px;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.08);
+  transition: background 0.2s;
+}
+
+.header-avatar-container:hover {
+  background: rgba(16,185,129,0.18);
+}
+
+.avatar-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.avatar-circle-visual {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 60%, #06b6d4 100%);
   color: #fff;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.18);
+  border: 2px solid #fff;
+  transition: box-shadow 0.2s;
+}
+
+.avatar-link:hover .avatar-circle-visual {
+  box-shadow: 0 0 0 4px #10b98155;
+  filter: brightness(1.1);
+}
+
+.avatar-name {
+  font-weight: 600;
+  color: #10b981;
+  font-size: 1.08rem;
+  margin-left: 2px;
+  margin-right: 8px;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+
+.logout-btn {
+  color: #ef4444;
+  font-size: 1.3rem;
+  margin-left: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn:hover {
+  color: #fff;
+  background: #ef4444;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.login-link-visual {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(90deg, #3498db 60%, #06b6d4 100%);
+  color: #fff;
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-weight: 600;
+  font-size: 1.08rem;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(52,152,219,0.12);
+  transition: background 0.2s, color 0.2s;
+}
+
+.login-link-visual:hover {
+  background: linear-gradient(90deg, #06b6d4 60%, #3498db 100%);
+  color: #fff;
+  filter: brightness(1.1);
 }

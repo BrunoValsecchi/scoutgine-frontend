@@ -35,20 +35,43 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="dashboard-container">
-            <!-- Presentación/Bienvenida -->
-            <div id="presentacion-container" class="presentacion-section">
-                <!-- Se cargará con JavaScript -->
-            </div>
-            
-            <!-- Gráficos y Estadísticas -->
-            <div id="graficos-container" class="graficos-section">
-                <!-- Se cargarán con JavaScript -->
-            </div>
-            
-            <!-- Tabla de Datos -->
-            <div id="tabla-container" class="tabla-section">
-                <!-- Se cargará con JavaScript -->
-            </div>
+           
+
+            <!-- Estadísticas de Jugadores y Equipos -->
+            <section class="stats-explanation">
+              <h2><i class="fas fa-futbol"></i> Estadísticas de Jugador</h2>
+              <div id="stats-table-jugador"></div>
+              <h2 style="margin-top:2em;"><i class="fas fa-users"></i> Estadísticas de Equipo</h2>
+              <div id="stats-table-equipo"></div>
+            </section>
+
+            <!-- Tipos de Gráficos -->
+            <section class="charts-explanation">
+              <h2><i class="fas fa-chart-area"></i> Tipos de Gráficos</h2>
+              <div class="charts-cards">
+                <div class="chart-card">
+                  <div class="chart-icon radar"></div>
+                  <h3>Gráfico Radar</h3>
+                  <p>
+                    Un <b>gráfico radar</b> permite comparar varias variables de un jugador o equipo en forma de "araña". Cada eje representa una estadística y la forma resultante muestra fortalezas y debilidades de manera visual.
+                  </p>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-icon boxplot"></div>
+                  <h3>Gráfico de Caja</h3>
+                  <p>
+                    El <b>gráfico de caja</b> (boxplot) muestra la distribución de una estadística: valores mínimos, máximos, mediana y cuartiles. Es ideal para comparar el rendimiento de un jugador respecto al resto.
+                  </p>
+                </div>
+                <div class="chart-card">
+                  <div class="chart-icon scatter"></div>
+                  <h3>Gráfico de Dispersión</h3>
+                  <p>
+                    El <b>gráfico de dispersión</b> muestra la relación entre dos variables (por ejemplo, goles vs. asistencias) para todos los jugadores, permitiendo identificar tendencias y outliers.
+                  </p>
+                </div>
+              </div>
+            </section>
         </div>
     </main>
 

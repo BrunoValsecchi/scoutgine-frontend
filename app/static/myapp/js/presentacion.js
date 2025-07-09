@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: 1800,
       delay: 800
     });
-    
+
     anime({
       targets: '.image-2',
       opacity: [0, 1],
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       duration: 1800,
       delay: 1100
     });
-    
+
     anime({
       targets: '.image-3',
       opacity: [0, 1],
@@ -92,6 +92,16 @@ document.addEventListener('DOMContentLoaded', () => {
       easing: 'easeOutQuad',
       duration: 1800,
       delay: 1400
+    });
+
+    // Añade esto para la nueva imagen:
+    anime({
+      targets: '.image-4',
+      opacity: [0, 1],
+      translateY: [60, 0],
+      easing: 'easeOutQuad',
+      duration: 1800,
+      delay: 1700
     });
   }
   
@@ -799,3 +809,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+function initAllAnimations() {
+  // Initial entrance animations
+  animateEntrance();
+  
+  // Header animations
+  animateHeaderElements();
+  
+  // Section specific animations
+  animateAppSection();
+  animatePlansSection();
+  animateDescriptionSection();
+  
+  // Background and decorative effects
+  animateColorSlider();
+  addParticleEffect();
+  animateDataPoints();
+  
+  // Interactive effects
+  setupParallaxEffect();
+  setupScrollEffect();
+  initScrollAnimations();
+  animateFormElements();
+}
+
+window.initAllAnimations = initAllAnimations;

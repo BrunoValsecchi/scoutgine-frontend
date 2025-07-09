@@ -5,18 +5,136 @@
   <title>Admin Dashboard | ScoutGine</title>
   <link rel="stylesheet" href="static/myapp/css/dashboard.css">
   <link rel="stylesheet" href="static/myapp/css/menu.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
   <div id="header-container"></div>
+  
   <main class="dashboard-main">
-    <h1>Panel de Administración</h1>
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">Panel de Administración</h1>
+      <button class="btn-primary" onclick="openCreateModal()">
+        <i class="fas fa-plus"></i> Nuevo Usuario
+      </button>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-cards" id="stats-cards">
+      <div class="stat-card">
+        <div class="stat-number" id="total-users">0</div>
+        <div class="stat-label">Total Usuarios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="admin-users">0</div>
+        <div class="stat-label">Administradores</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="premium-users">0</div>
+        <div class="stat-label">Usuarios Premium</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="free-users">0</div>
+        <div class="stat-label">Usuarios Free</div>
+      </div>
+    </div>
+
+    <!-- Búsqueda y filtros -->
+    <div class="search-container">
+      <input type="text" class="search-input" id="search-input" placeholder="Buscar por email o nombre...">
+      <select class="filter-select" id="role-filter">
+        <option value="">Todos los roles</option>
+        <option value="admin">Admin</option>
+        <option value="user">Usuario</option>
+      </select>
+      <select class="filter-select" id="plan-filter">
+        <option value="">Todos los planes</option>
+        <option value="free">Free</option>
+        <option value="basic">Basic</option>
+        <option value="premium">Premium</option>
+      </select>
+    </div>
+
+    <!-- Tabla de usuarios -->
     <div id="admin-users-table">
-      <p>Cargando usuarios...</p>
+      <p class="loading">Cargando usuarios...</p>
     </div>
   </main>
+
+  <!-- Modal para crear/editar usuario -->
+  <div id="user-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">Nuevo Usuario</h2>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <form id="user-form">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="user-email" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input type="text" class="form-input" id="user-nombre">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rol</label>
+          <select class="form-select" id="user-role">
+            <option value="user">Usuario</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Plan</label>
+          <select class="form-select" id="user-plan">
+            <option value="free">Free</option>
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+        <div class="form-group" id="password-group">
+          <label class="form-label">Contraseña</label>
+          <input type="password" class="form-input" id="user-password" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn-primary" style="width: 100%;">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+      <div id="modal-message"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="static/myapp/js/supabase-client.js"></script>
-  <script src="static/myapp/js/header.js"></script>
-  <script src="static/myapp/js/dashboard.js"></script>
+  <script>
+document.body.style.visibility = 'hidden';
+
+async function protectDashboard() {
+    // Esperar a que supabaseClient esté disponible
+    while (!window.supabaseClient) {
+        await new Promise(r => setTimeout(r, 100));
+    }
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const user = session?.user;
+    const role = user?.user_metadata?.role;
+
+    if (role !== 'admin') {
+        alert('Acceso solo para administradores');
+        window.location.href = 'menu.html';
+        return;
+    }
+    document.body.style.visibility = 'visible';
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', protectDashboard);
+} else {
+    protectDashboard();
+}
+</script>
+<script src="static/myapp/js/config.js"></script>
+<script src="static/myapp/js/header.js"></script>
+<script src="static/myapp/js/dashboard.js"></script>
 </body>
 </html>
