@@ -265,16 +265,16 @@ body {
   line-height: 1.2;
 }
 
-/* GRID DE GRÁFICOS - MÁS OSCURO */
-.charts-grid {
+/* GRID DE GRÁFICOS */
+.jugador-charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   margin-bottom: 24px;
 }
 
-/* CARDS DE GRÁFICOS - MÁS OSCURAS */
-.chart-card {
+/* CARDS DE GRÁFICOS */
+.jugador-chart-card {
   background: var(--gradient-dark);
   border-radius: 16px;
   border: 1px solid var(--border-color);
@@ -282,173 +282,75 @@ body {
   overflow: hidden;
   transition: all 0.3s ease;
   position: relative;
+  width: 670px;
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.chart-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
-}
+.jugador-chart-card:nth-child(1) { animation-delay: 0.1s; }
+.jugador-chart-card:nth-child(2) { animation-delay: 0.2s; }
+.jugador-chart-card:nth-child(3) { animation-delay: 0.3s; }
 
-.chart-card:hover {
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--primary-color);
-  transform: translateY(-2px);
-}
-
-.chart-header {
-  padding: 24px 24px 16px 24px;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.chart-header h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chart-header i {
-  color: var(--primary-color);
-  font-size: 1.3rem;
-  filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.5));
-}
-
-.chart-controls {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
-}
-
-.chart-controls label,
-.control-label {
-  font-weight: 500;
-  color: #333;
-  margin-right: 8px;
-  display: inline-block;
-}
-
-.control-select {
-  min-width: 150px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
-}
-
-.chart-content {
+.jugador-chart-content {
   padding: 16px 24px 24px 24px;
+  min-height: 650px;
   height: 650px;
   position: relative;
   background: rgba(0, 0, 0, 0.1);
 }
 
-/* GRÁFICO DE RADAR */
-.radar-card .chart-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-}
-
-#radar-jugador-chart-container {
-  width: 100%;
-  height: 100%;
-}
-
-#radar-chart-container {
-    min-height: 420px;
-    height: 420px;
-    max-width: 520px;
-    margin: 0 auto;
-}
-
-/* GRÁFICO DE BOXPLOT */
-.boxplot-card .chart-content {
+.jugador-radar-card .jugador-chart-content,
+.jugador-boxplot-card .jugador-chart-content {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-#boxplot-jugador-chart-container {
-  width: 100%;
-  height: 100%;
-}
-
-#boxplot-chart-container {
-    min-height: 420px;
-    height: 420px;
-    max-width: 520px;
-    margin: 0 auto;
-}
-
-/* GRÁFICO DE DISPERSIÓN */
-.scatter-card {
+.jugador-scatter-card {
   grid-column: 1 / -1;
 }
 
-.scatter-content {
-  height: 620px;
+.jugador-scatter-content {
+  min-height: 700px;
+  height: 700px;
   background: rgba(0, 0, 0, 0.2);
 }
 
-#chart-dispersion-jugador {
-  width: 100%;
-  height: 100%;
+/* NUEVA CARD DE DISPERSIÓN */
+.jugador-dispersion-card {
+  background: var(--gradient-dark);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-heavy);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 1360px;
+  max-width: 98vw;
+  animation: 1fadeInUp 0.6s ease-out;
+  grid-column: 1 / -1;
 }
 
-#chart-dispersion {
-    min-height: 700px;
-    height: 700px;
-    max-width: 1100px;
-    margin: 0 auto;
+.jugador-dispersion-content {
+  min-height: 700px;
+  height: 700px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 16px 24px 24px 24px;
+  position: relative;
 }
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .charts-grid {
+  .jugador-charts-grid {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 24px;
   }
-  
-  .hero-content {
-    flex-direction: column;
-    text-align: center;
+  .jugador-chart-content {
+    min-height: 520px;
+    height: 520px;
   }
-  
-  .stats-hero {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .chart-content {
-    height: 350px;
-  }
-  
-  .scatter-content {
-    height: 500px;
-  }
-  
-  /* Cards responsive */
-  .stat-hero-card {
-    min-width: 100px;
-    padding: 20px 24px;
-  }
-  
-  .stat-hero-card .stat-value {
-    font-size: 1.8rem;
+  .jugador-scatter-content {
+    min-height: 700px;
+    height: 700px;
   }
 }
 

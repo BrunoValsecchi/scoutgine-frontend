@@ -440,8 +440,41 @@ if (typeof window.EstadisticaJugadorLoaded === 'undefined') {
         }
     }
 
-    // ✅ INICIALIZACIÓN - UNA SOLA VEZ
+    // ✅ FUNCIÓN PARA AJUSTAR ALTURA DE GRÁFICOS
+    function ajustarAlturaGraficos() {
+        // Radar
+        const radarContainer = document.getElementById('radar-jugador-chart-container');
+        if (radarContainer) {
+            radarContainer.style.height = '500px';
+            radarContainer.style.minHeight = '500px';
+        }
+        // Boxplot
+        const boxplotContainer = document.getElementById('boxplot-jugador-chart-container');
+        if (boxplotContainer) {
+            boxplotContainer.style.height = '400px';
+            boxplotContainer.style.minHeight = '400px';
+        }
+        // Dispersión
+        const dispersionContainer = document.getElementById('chart-dispersion-jugador');
+        if (dispersionContainer) {
+            dispersionContainer.style.height = '500px';
+            dispersionContainer.style.minHeight = '500px';
+        }
+        // Card containers
+        document.querySelectorAll('.chart-content').forEach(el => {
+            el.style.height = '650px';
+            el.style.minHeight = '650px';
+        });
+        document.querySelectorAll('.scatter-content').forEach(el => {
+            el.style.height = '700px';
+            el.style.minHeight = '700px';
+        });
+    }
+
+    // Llama a la función al cargar la página y después de renderizar los gráficos
     document.addEventListener('DOMContentLoaded', function() {
+        ajustarAlturaGraficos();
+
         console.log('🎯 Inicializando EstadisticaJugador - VERSIÓN LIMPIA');
 
         // 1. Event listener para selector global de estadísticas

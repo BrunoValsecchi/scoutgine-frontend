@@ -96,9 +96,9 @@
             </div>
 
             <!-- GRÁFICOS GRID -->
-            <div class="charts-grid">
+            <div class="jugador-charts-grid">
                 <!-- RADAR CHART -->
-                <div class="chart-card radar-card">
+                <div class="jugador-chart-card jugador-radar-card">
                     <div class="chart-header">
                         <h3><i class="bx bx-radar"></i> Radar del Jugador</h3>
                         <div class="chart-controls">
@@ -108,42 +108,37 @@
                                 <option value="ofensivos">Ofensivos</option>
                                 <option value="generales">Generales</option>
                             </select>
-                            
-                            <!-- El selector de posición se creará automáticamente -->
                         </div>
                     </div>
-                    <div class="chart-content">
+                    <div class="jugador-chart-content">
                         <div id="radar-jugador-chart-container"></div>
                     </div>
                 </div>
 
-                 <!-- BOXPLOT CHART - ELIMINAR LABEL DE POSICIÓN -->
-                <div class="chart-card boxplot-card">
+                <!-- BOXPLOT CHART -->
+                <div class="jugador-chart-card jugador-boxplot-card">
                     <div class="chart-header">
                         <h3><i class="bx bx-bar-chart-square"></i> Distribución</h3>
-                        <div class="chart-controls">
-                        </div>
+                        <div class="chart-controls"></div>
                     </div>
-                    <div class="chart-content">
+                    <div class="jugador-chart-content">
                         <div id="boxplot-jugador-chart-container"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- GRÁFICO DE DISPERSIÓN - ELIMINAR LABEL DE POSICIÓN -->
-            <div class="chart-card scatter-card">
+            <!-- GRÁFICO DE DISPERSIÓN -->
+            <div class="jugador-dispersion-card">
                 <div class="chart-header">
                     <h3><i class="bx bx-scatter-chart"></i> Análisis de Dispersión</h3>
                     <div class="chart-controls">
-                        
-                        <!-- ✅ MANTENER: Selector del eje Y -->
                         <label for="stat-y-selector" class="control-label">Eje Y:</label>
                         <select id="stat-y-selector" class="control-select">
                             <option value="">Seleccionar estadística...</option>
                         </select>
                     </div>
                 </div>
-                <div class="chart-content scatter-content">
+                <div class="jugador-dispersion-content">
                     <div id="chart-dispersion-jugador"></div>
                 </div>
             </div>
