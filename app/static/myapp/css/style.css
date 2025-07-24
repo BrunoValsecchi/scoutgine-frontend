@@ -1613,3 +1613,36 @@
     padding: 2rem 0.3rem;
   }
 }
+
+/* Responsive header nav */
+@media (max-width: 700px) {
+  .div-headerlan-ul {
+    display: none;
+    flex-direction: column;
+    background: #181c24;
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 180px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 100;
+  }
+  .div-headerlan-ul.active {
+    display: flex;
+  }
+  .header-hamburger {
+    display: block;
+    cursor: pointer;
+    margin-left: 1rem;
+    font-size: 2rem;
+    color: #fff;
+    background: none;
+    border: none;
+  }
+}
+@media (min-width: 701px) {
+  .header-hamburger {
+    display: none;
+  }
+}
